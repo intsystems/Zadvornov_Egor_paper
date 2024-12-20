@@ -1,0 +1,837 @@
+% references are stored in references.bib file
+% to cite from it write '\cite{kour2014real,kour2014fast}'
+
+% to paste a url:
+% \begin{center}
+%   \url{http://mirrors.ctan.org/macros/latex/contrib/natbib/natnotes.pdf}
+% \end{center}
+
+\documentclass{article}
+
+\usepackage{arxiv}
+
+ % Русский язык
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage[T2A]{fontenc}			% кодировка
+\usepackage[utf8]   {inputenc}			% кодировка исходного текста
+\usepackage[english]{babel}	% локализация и переносы
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}    
+
+% \usepackage[english,russian]{babel}	% локализация и переносы
+
+% Математика
+\usepackage{amsmath,amsfonts,amssymb,amsthm,mathtools} 
+
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{float}
+\restylefloat{table}
+
+\graphicspath{ {./images/} }
+
+
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{subfigure}
+
+\title{Forecasting highly volatile time series of social trends and public interests}
+
+
+\author{
+  Zadvornov Egor \\
+  MIPT\\
+  \texttt{zadvornov.ev@phystech.edu} \\
+ % examples of more authors
+ %   \And
+ % Zixuan Lu \\
+ %  School of Coumputing and Information\\
+ %  University of Pittsburgh\\
+ %  Pittsburgh, PA 15213 \\
+ %  \texttt{ZIL50@pitt.edu} \\
+  %% \AND
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Analyzing and predicting trends in the media landscape is a complex task due to the volatility and instability of social trends and public interests. This study presents a novel approach that combines time series forecasting methods and topic modeling to tackle this challenge. The proposed framework leverages a multi-pronged clustering strategy, including embedding-based and topic modeling-based techniques, to identify thematic clusters within the media data. For each cluster, the study employs the state-of-the-art Prophet forecasting model to capture the unique characteristics and dynamics, enabling accurate predictions of future trends.
+
+The results demonstrate the effectiveness of this hybrid approach, particularly in forecasting trends related to American football. However, the study also identifies limitations in predicting certain clusters that exhibit peculiarities, such as abrupt peaks and trend shifts. To address this, the study outlines future research directions, including the exploration of anomaly detection and forecasting algorithms specifically designed to handle complex time series patterns. By combining the strengths of time series forecasting and topic modeling, this work contributes to the advancement of trend prediction techniques in the dynamic and multifaceted media landscape, with potential applications in various domains beyond media, such as scientific publication trends and product demand forecasting.
+\end{abstract}
+
+
+\keywords{A set of time series \and Volatility \and Social Trends \and Prophet \and Topic Modeling \and ARIMA.}
+
+
+\section{Introduction}
+The ability to accurately analyze and forecast trends in the ever-evolving media landscape is a critical challenge with far-reaching implications across various domains, including marketing, media production, public relations, and innovation research. This study presents a novel framework that combines state-of-the-art time series forecasting techniques and topic modeling to tackle this complex problem.
+
+Key terms in this context are defined as follows:
+
+\begin{itemize}
+\item Media landscape refers to the dynamic and multifaceted ecosystem of digital media, including social media platforms, search engines, and news outlets.
+\item Trend forecasting involves the prediction of future patterns, themes, and discussions that are likely to emerge and gain prominence within the media landscape.
+\item Topic modeling is a technique used to identify and extract the latent thematic structure within a corpus of text-based data, such as social media posts or news articles.
+\end{itemize}
+
+The main idea of this work is to leverage a hybrid approach that integrates the strengths of time series forecasting and topic modeling to provide accurate and nuanced predictions of future media trends. By identifying coherent thematic clusters within the data and applying customized forecasting models to each cluster, the framework aims to capture the unique dynamics and patterns associated with different topics.
+
+
+Recent developments in the field of time series analysis have demonstrated the potential for more sophisticated techniques to handle the complexity of media data. For instance, Shumway and Stoffer \cite{Shumway2000} investigated the time series analysis techniques, which could be adapted for predicting social trends. Bouchaud et al. \cite{Bouchaud2018} focused on modeling micro-level dynamics in financial markets, an approach that may be relevant for understanding the evolution of social trends. Additionally, the methods for quasi-periodic time series clustering discussed in Grabovoy and Strizhov \cite{Grabovoy2019} and the use of variational autoencoders \cite{Das2020VAE} for learning lower-dimensional representations could be promising directions for the analysis of social trend data.
+
+While existing approaches often rely on simplistic trend identification or manual curation, the current state of the field lacks a comprehensive and systematic framework for predicting trends in the media landscape \cite{rappaz2019dynamic}. Conventional models, such as ARIMA \cite{holt2004forecasting}  or Exponential Smoothing \cite{Gardner1985}, have been applied directly to forecast specific topics at the next point in time 
+ (e.g., Google Trends \cite{choi2012predicting}). However, these methods may fail to account for the high-dimensional and volatile nature of the media data, as well as the need to differentiate predictions based on relevant social groups or audience segments.
+
+% The novelty of our method is the addition of a procedure for clustering topics and predicting the popularity of a whole class of trends.
+
+To address these limitations, the proposed framework integrates a multi-pronged clustering strategy, including embedding-based \cite{sinaga2020unsupervised} and topic modeling-based techniques \cite{blei2003latent}, to identify coherent thematic clusters within the media data. For each identified cluster, the study employs the state-of-the-art Prophet forecasting model \cite{Taylor2018}, which has demonstrated exceptional capabilities in handling various time-series patterns, such as seasonality, trend changes, and outliers. 
+
+% This unique combination of methods aims to provide a more robust and accurate approach to trend prediction, with the potential for tailored insights targeting specific audience segments or domains beyond media, such as scientific publication trends or product demand forecasting.
+
+
+This approach seems to be more justified and useful, since it can be integrated into other algorithms, such as those for сonventional time series prediction on the predicted set of topics. One of the goals of this work is to check whether the algorithm we developed is superior to the methods described above. As demonstrated in Section “Forecasting”, the model is able to capture unique patterns in the data that simpler models, such as ARIMA or Exponential Smoothing, do not account for. Therefore, our framework demonstrates better metrics.
+
+Furthermore, the framework can be extended to differentiate predictions based on social groups. This involves selecting a target social group (e.g., predicted cluster for sports), increasing the granularity of topics for that group (e.g., football, volleyball, Messi, etc.), and making predictions accordingly. This approach can provide more tailored and relevant insights for specific audience segments.
+
+The potential impact of this work is vast, as the ability to reliably forecast media trends can have far-reaching implications across numerous industries and domains. From marketing and communication strategies to innovation research and product development, the insights gleaned from our framework can help organizations better anticipate and respond to the evolving interests and discussions of their target audiences.
+
+Furthermore, the generalizability of our approach extends beyond the media domain, as the underlying principles can be applied to other complex and high-dimensional time-series data, such as trends in scientific publications, social movements, or consumer demand patterns. By pushing the boundaries of trend forecasting, this study aims to contribute to the advancement of time-series analysis and predictive modeling, with the ultimate goal of empowering decision-makers to navigate the dynamic and ever-changing landscapes of the modern world.
+
+
+
+
+
+
+\section{Problem Statement}
+Let $T = \{T^k\}_{k=1}^K$ be the set of unique topics, where $K$ is the total number of distinct topics. There is a time series $\{t_i\}_{i=1}^N$, corresponding to a sequence of dates, and for each date $t_i$ there is a set $\{T_{ij}\}_{j=1}^{M_i}$ of popular topics, where $M_i$ is the number of popular topics on day $t_i$. Each  $T_{ij} \in T$ represents a single word or phrase of up to 4 words.
+
+The goal of this work is to predict the future popularity of topics. To achieve this goal, the following algorithm is proposed:
+
+\subsection{Topic Clustering}
+
+1. The set $T$  is clustered into $n$ semantic clusters  $c_m = \{T^k\}_{k=1}^{n_m}$, $m = 1, \ldots, n$, where  $n_m$  is the number of topics in cluster $c_m$. We employed a multi-pronged approach to clustering the time series data, experimenting with several techniques to identify the most effective method. Here are the top 2 of them
+
+\begin{itemize}
+\item Embeddings + K-Means
+\item Topic Modeling on Topics using Latent Dirichlet Allocation (LDA)
+\end{itemize}
+
+% \subsubsection{K-Means + Embeddings}
+Key steps of the first approach are Embedding Generation, which utilized the Sentence Transformers library \cite{Reimers2019} to generate contextual embeddings for each topic using the all-MiniLM-L12-v2 model \cite{SentenceTransformers}, and then K-Means Clustering applied to embedded topics \cite{sinaga2020unsupervised}. Since both algorithms are widely known operations, we do not provide a detailed description of them in this work, leaving only a reference links.
+
+The second algorithm works as follows. The preprocessing steps included lemmatization, stop word removal, and keeping words of length 2-3. Then the LDA model is created \cite{blei2003latent}.
+
+% --------------------------
+\subsubsection{LDA}
+The Latent Dirichlet Allocation (LDA) model is a probabilistic topic model that allows discovering hidden (latent) topics in a collection of text documents. The LDA model is based on the assumption that each document is a mixture of several topics, and each word in the document belongs to one of these topics.
+
+The LDA algorithm includes the following steps:
+\begin{itemize}
+\item For each topic $k \in {1, \ldots, K}$:
+\begin{itemize}
+\item Choose the word distribution $\phi_k \sim \mathrm{Dirichlet}(\beta)$, where  $\beta$ is the hyperparameter that sets the prior Dirichlet distribution for the word distributions.
+\end{itemize}
+\item For each document $d \in {1, \ldots, D}$:
+\begin{itemize}
+\item Choose the topic distribution $\theta_d \sim \mathrm{Dirichlet}(\alpha)$, where  $\alpha$ is the hyperparameter that sets the prior Dirichlet distribution for the topic distributions.
+\item For each word $w_{dn}$ in document $d$:
+\begin{itemize}
+\item Choose a topic $z_{dn} \sim \mathrm{Multinomial}(\theta_d)$
+\item Choose a word $w_{dn} \sim \mathrm{Multinomial}(\phi_{z_{dn}})$
+\end{itemize}
+\end{itemize}
+\end{itemize}
+
+The joint distribution of all the model variables (topic distributions $\theta$, word distributions $\phi$, topic assignments $\mathbf{z}$, and observed words $\mathbf{w}$) can be written as:
+
+\begin{equation}
+p(\theta, \phi, \mathbf{z}, \mathbf{w} | \alpha, \beta) = \prod_{k=1}^K p(\phi_k | \beta) \prod_{d=1}^D p(\theta_d | \alpha) \prod_{n=1}^{N_d} p(z_{dn} | \theta_d) p(w_{dn} | \phi_{z_{dn}})
+\end{equation}
+
+The inference task in LDA is to find the posterior distribution of the hidden variables ($\theta$, $\phi$ and $\mathbf{z}$) given the observed words $\mathbf{w}$ and hyperparameters $\alpha$ and $\beta$. Since the exact inference in this model is computationally complex, approximate methods are used in practice.
+
+% --------------------------
+
+\subsubsection{Optimal Number of Clusters}
+% \paragraph{Оптимальное число кластеров}
+To determine the optimal number of clusters $n$, the average coherence measure $C_{\text{cv}}$ \cite{roder2015exploring} is used, which evaluates the interpretability of clusters to humans by measuring the semantic similarity between the words within a cluster:
+
+\begin{equation}
+n = \arg\min_{L \in \mathbb{N}} \frac{1}{L} \sum_{m=0,...,L-1} C_{\text{cv}}(c_m)
+\end{equation}
+
+
+The $C_{\text{cv}}$ measure is calculated as follows:
+
+\begin{equation}
+C_{\text{cv}} = \frac{1}{|S^{\text{one}}_{\text{set}}|} \sum_{(W_0, W_*) \in S^{\text{one}}_{\text{set}}} \tilde{m}_{\cos(\text{nlr}, 1)}(W_0, W_*)
+\end{equation}
+
+where  $S^{\text{one}}_{\text{set}} = \{(W_0, W_*) | W_0 = \{w_i\}, w_i \in W, W_* = W\}$ is the segmentation representing the set of pairs of subsets of words, $\tilde{m}_{\cos(\text{nlr}, 1)}(W_0, W_*)$  is the cosine similarity between the context vectors  $W_0$ and $W_*$, evaluating how well $W_*$ "explains" $W_0$.
+
+
+
+\subsubsection{Metric}
+% [add description of how the LDA model works].
+
+The aim of the section is to compare described approaches by clustering quality and choose one to use in the Forecasting section.
+The next criteria for selecting the best algorithm of these two, based on the coherence metric, was elaborated: 
+
+
+% <rewrite as formula in latex with proper definitions>
+% If | coherence embed - coherence LDA | < 0.05 AND coherence embed > 0.5
+% then: “We choose embedding”
+% else: “We choose LDA”
+
+
+\begin{equation}
+\text{Model} =
+\begin{cases}
+\text{Embedding},& \text{if } |C_{cv}^{Emb} - C_{cv}^{LDA}| < 0.1 \text{ and } C_{cv}^{Emb} > 0.5 
+& \text{LDA},& \text{otherwise}
+\end{cases}
+\end{equation}
+
+Thus, we allow a slight loss of the k-means algorithm to the LDA in metric value, since it is the more simple model and outperforms LDA.
+
+
+
+2. For each cluster  $c_m$ a time series $\{t_i, y_m^i\}_{i=1}^N$ is constructed, where $y_m^i$ is the number of occurrences of topics from cluster $c_m$ on day  $t_i$.
+
+\subsection{Topic Popularity Forecasting}
+
+Popular time series models, such as Prophet, ARIMA и Exponential Smoothing, are trained on the training sets $\{t_i, y_m^i\}_{train}$, $0 \leq i < N_{train}$, for each cluster $c_m$. The trained models are then applied to the test set $\{t_i, y_m^i\}_{test}$, $N_{train} \leq i < N_{train} + N_{test}$, to predict the number of occurrences $y_m^i$ of topics $\{T^k\}_{k=1}^{n_m}$ from cluster  $c_m$ at future time points $t_i$.
+
+\subsubsection{Prophet Model}
+
+The Prophet model is an additive regression model that decomposes the time series into the following components:
+
+\begin{equation}
+y(t) = g(t) + s(t) + h(t) + \epsilon_t
+\end{equation}
+
+where $g(t)$ is the trend component, $s(t)$ is the seasonality component, $h(t)$ is the holiday effects component, and $\epsilon_t$ is the random error.
+
+The trend component  $g(t)$ can be represented as a logistic growth $g(t)_{log}$ or a piecewise linear trend with change points $g(t)_{lin}$:
+
+
+\begin{align}
+g(t)_{lin} &= (k + \sum_{j=1}^S \delta_j)t + (m + \sum_{j=1}^S \gamma_j) &&\text{(linear trend)} \\
+g(t)_{log} &= \frac{C(t)}{1 + \exp{(-g(t)_{lin})}} &&\text{(nonlinear logistic growth)}
+\end{align}
+
+The seasonal component $s(t)$ is modeled using a Fourier series:
+
+
+\begin{equation}
+s(t) = \sum_{n=1}^N \left(a_n \cos\left(\frac{2\pi n t}{P}\right) + b_n \sin\left(\frac{2\pi n t}{P}\right)\right)
+\end{equation}
+
+The holiday effects $h(t)$ are modeled as a sum of indicator functions for each holiday $i$:
+
+
+
+\begin{equation}
+h(t) = \sum_{i=1}^L \theta_i \mathbb{1}_{t \in D_i}
+\end{equation}
+
+The estimation and optimization of the model parameters $\hat{\theta}$ is performed using the maximum likelihood method:
+
+\begin{equation}
+\hat{\theta} = \arg\min_{\theta} (-\log p(y | \theta) ) \left\{ = \frac{n}{2}\log(2\pi) + \frac{n}{2}\log(\sigma^2) + \frac{1}{2\sigma^2}\sum_{t} \left(y(t) - \sum_{i} f_i(t)\right)^2 \right\}
+\end{equation}
+
+where  $\theta$are the model parameters, $n$  is the number of observations, $\sigma^2$ is the error variance, $y(t)$ are the actual values, and $f_i(t)$ are the model components.
+
+Forecasting is done by extrapolating the trend, using the seasonal component, and incorporating the holiday effects:
+
+
+\begin{equation}
+\hat{y}(t+h) = \hat{g}(t+h) + \hat{s}(t+h) + \hat{h}(t+h)
+\end{equation}
+
+\subsubsection{SARIMA Model}
+
+The SARIMA (Seasonal Autoregressive Integrated Moving Average) model is an extension of ARIMA that accounts for seasonality in time series. The $SARIMA(p,d,q)(P,D,Q)_m$ model can be represented as:
+
+\begin{equation}
+(1-\phi_1 B) (1-\Phi_1 B^m)(1-B)^d(1-B^m)^D y_t = (1+\theta_1 B) (1+\Theta_1 B^m)\epsilon_t
+\end{equation}
+
+where $p$ is the order of the non-seasonal autoregressive part, $d$ is the degree of non-seasonal differencing, $q$ is the order of the non-seasonal moving average part, $P$ is the order of the seasonal autoregressive part, D is the degree of seasonal differencing, $Q$ is the order of the seasonal moving average part, $m$ is the number of periods in the seasonal cycle, $\phi_1$ is the parameter of the non-seasonal autoregressive part, $\Phi_1$ is the parameter of the seasonal autoregressive part, $\theta_1$ is the parameter of the non-seasonal moving average part, $\Theta_1$ is the parameter of the seasonal moving average part, $B$ is the backward shift operator ($B^j y_t = y_{t-j}$), and $\epsilon_t$ is white noise.
+
+The SARIMA algorithm includes the following steps:
+
+1.Model identification: Determining the values of $p$, $d$, $q$, $P$, $D$, $Q$ and $m$ based on the analysis of the autocorrelation (ACF) and partial autocorrelation (PACF) functions, as well as stationarity tests.
+
+2. Parameter estimation: Estimating the parameters $\phi_1$, $\Phi_1$, $\theta_1$, $\Theta_1$ and the noise variance $\sigma^2$ using the maximum likelihood method or conditional least squares.
+
+3. Model diagnostics: Checking the adequacy of the model by analyzing the residuals for autocorrelation, normality, and homoscedasticity.
+
+4. Forecasting: Obtaining point and interval forecasts based on the estimated model:
+
+\begin{equation}
+\hat{y}_{t+h|t} = \phi_1 \hat{y}_{t+h-1|t} + \Phi_1 \hat{y}_{t+h-m|t} - \theta_1 \hat{\epsilon}_{t+h-1|t} - \Theta_1 \hat{\epsilon}_{t+h-m|t}
+\end{equation}
+
+where $\hat{\epsilon}_{t+h|t} = 0$ for $h > 0$.
+
+\subsubsection{Holt-Winters (Exponential Smoothing) Method}
+
+The Holt-Winters method is an extension of the exponential smoothing model to handle trend and seasonality. The additive Holt-Winters method is represented as:
+
+\begin{equation}
+\hat{y}_{t+h|t} = l_t + h b_t + s_{t+h-m(k+1)}
+\end{equation}
+
+where $\hat{y}_{t+h|t}$ is the forecast $h$ steps ahead made at time $t$, $l_t$ is the level of the series, $b_t$ is trend, $s_t$ is the seasonal component, $m$ is the number of periods in the seasonal cycle, and $k = \lfloor(h-1)/m\rfloor$.
+
+The Holt-Winters algorithm:
+
+1. Initialization of initial values for level $l_0$, trend $b_0$ and seasonal components $s_0$, $s_{-1}$, $\ldots$, $s_{-(m-1)}$.
+
+2. At each step $t$, the level $l_t$, trend $b_t$ and seasonal component $s_t$ are updated according to the formulas:
+
+\begin{align}
+l_t = \alpha(y_t - s_{t-m}) + (1-\alpha)(l_{t-1} + b_{t-1})\
+\end{align}
+\begin{align}
+b_t = \beta(l_t - l_{t-1}) + (1-\beta)b_{t-1}\
+\end{align}
+\begin{align}
+s_t = \gamma(y_t - l_t) + (1-\gamma)s_{t-m}
+\end{align}
+
+where $\alpha$, $\beta$, $\gamma$ are smoothing parameters.
+
+3. Forecasting using the updated level, trend, and seasonality:
+\begin{equation}
+\hat{y}_{t+h|t} = l_t + hb_t + s_{t+h-m(k+1)}
+\end{equation}
+
+4. Estimate the smoothing parameters $\alpha$, $\beta$, $\gamma$ by minimizing the sum of squared forecast errors.
+
+
+\subsection{Forecast quality criteria}
+
+Let $\mathbf{Y}_m \in R^{N_{test}}$ be the ordered set of actual values of the time series for cluster $c_m$ at moments $t_i$, 
+$N_{train} \leq i < N_{train} + N_{test}$ :
+\begin{equation}
+     \mathbf{Y}_m = [y_m^{N_{train}}, \ldots, y_m^{N_{train} + N_{test} - 1}]^T.
+\end{equation}
+
+Obtain 
+$\{\mathbf{Y}_m\}_{m=1}^{n}$
+
+ 
+%  \begin{equation}
+%     \mathbf{Y} = [\mathbf{Y}_1, \ldots, \mathbf{Y}_n]^T.
+% \end{equation}. 
+
+As performance metrics for time series forecasting, the Mean Absolute Error (MAE) and Mean Squared Error (MSE) are used:
+
+\begin{equation}
+\text{MAE} = \frac{1}{n}\sum\limits_{i = 1}^{n}|\mathbf{Y}_i - \mathbf{\hat{Y}}_i|
+\end{equation}
+
+\begin{equation}
+\text{MSE} = \frac{1}{n}\sum\limits_{i = 1}^{n}(\mathbf{Y}_i - \mathbf{\hat{Y}}_i)^2
+\end{equation}
+
+where $\{\mathbf{\hat{Y}}_m\}_{m=1}^{n}$ are the forecasted values, and $n$ is the number of time series.
+
+
+
+% ----------------------- OLD--------------------------------------
+
+\section{Data construction}
+\label{sec:headings}
+The dataset used in this study consists of publicly available posts on social media platforms, such as Twitter, and the most popular search queries through browsers, such as Google, over several years. The data was collected from media aggregation platforms and spans the period from January 1, 2019, to March 3, 2024.
+
+The dataset includes the top 15 news topics from both Twitter and Google for each day during this time period, resulting in a total of 76,140 observations. The dataset has the following structure:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Time} & \textbf{Source} & \textbf{Topic}           \\ \hline
+2024-03-03    & Twitter         & Rashford                 \\ \hline
+2024-03-03    & Twitter         & \#sundayvibes            \\ \hline
+2024-03-03    & Twitter         & Xavier Worthy            \\ \hline
+2024-03-03    & Twitter         & Foden                    \\ \hline
+2024-03-03    & Twitter         & \#UFCVegas87             \\ \hline
+...           & ...             & ...                      \\ \hline
+2017-03-18    & Google          & Robert Osborne           \\ \hline
+2017-03-18    & Google          & Alejandra Campoverdi     \\ \hline
+2017-03-18    & Google          & Drake More Life          \\ \hline
+2017-03-18    & Google          & Drake More Life Download \\ \hline
+2017-03-18    & Google          & Costco Travel            \\ \hline
+\end{tabular}
+\caption{Sample of data}
+\label{tab:timefromtime}
+\end{table}
+
+The dataset includes information on the timestamp, source (Twitter or Google), and the specific topic or search query.
+The target variable (Y) in this dataset is the Topic, representing the popular topics discussed on social media and search engines over time. The predictor variable (X) is the Time, which represents the date and serves as the input for forecasting the future trends in the media landscape.
+Prediction is feasible in this dataset due to the presence of cyclic/periodic patterns in the target variable (Y) over time (X). The topics discussed in the media often exhibit seasonal and temporal patterns, which can be leveraged to forecast future trends.
+To assess the generalizability of the proposed approach, the study also tested the model on two additional datasets:
+Twitter Trending Tweets \cite{TwitterTrends}: This dataset contains information on the daily trending tweets on Twitter, including the topic and its significance.
+YouTube Trending Video Dataset \cite{YouTubeTrends}: This dataset includes data on the daily trending YouTube videos, such as the video title, channel, and various engagement metrics.
+However, the results from these additional datasets were not as promising as the primary dataset, and the details are provided in the Appendix.
+The primary dataset used in this study offers a comprehensive representation of the media landscape, covering both social media and search engine trends. The combination of Twitter and Google data provides a well-rounded view of the evolving public interests and discussions, making it a suitable testbed for the proposed trend forecasting framework.
+We  applied the model to this dataset, see this description in the next paragraphs.
+
+
+\section{Experiment}
+\subsection{Research Objectives}
+The main goal of this computational experiment is to verify the hypothesis that the proposed hybrid approach is superior to traditional time series models, such as ARIMA and Exponential Smoothing, in the task of forecasting trends in the media landscape.
+
+To achieve this goal, the following is proposed:
+\begin{itemize}
+\item Develop methods for clustering topics of public interest
+\item Compare the quality of the Prophet, ARIMA, and Exponential Smoothing models in the task of predicting the obtained clusters using the semantic distance metric
+\end{itemize}
+
+% Основными целями данного вычислительного эксперимента являются:
+
+% Выбор наилучшего алгоритма кластеризации топиков из двух вариантов: Embeddings + K-Means и LDA.
+
+% Сравнение популярных моделей для прогнозирования временных рядов, а именно ARIMA, Prophet и Exponential Smoothing, и проверка гипотезы о том, что модель Prophet дает наилучшие значения метрики MSE.
+
+% Сравнение метрик наилучшей модели для прогнозирования в случае предсказания числа вхождений $y_i$ каждого отдельного топика $T^k$ и в случае предсказания числа $y_m^i$ внутри кластера $c_m$. Проверка гипотезы о том, что подход с кластеризацией топиков будет давать лучшие метрики.
+
+We expect that using the Prophet model in conjunction with clustering will allow us to more accurately capture the specific dynamics of each cluster and, as a result, obtain more accurate predictions of topic popularity in the future.
+
+\subsection{Описание эксперимента}
+The scheme of the pipeline is presented at ~\ref{fig:pipeline}.
+
+\begin{figure}[h] 
+    \centering
+    \includegraphics[width=15cm,height=6cm,keepaspectratio]{pipeline.png}
+    \label{fig:pipeline}
+    \caption{Image of the pipeline structure.}
+\end{figure}
+
+For the experiment, we use the dataset described in the "Problem Formulation" section. The data includes information about topics discussed on social media and search engines from January 1, 2019, to March 3, 2024.
+
+
+In the first stage, we apply the preprocessing, clustering algorithms described in the "Topic Clustering" section: Embeddings + K-Means and LDA. Based on the clustering results, we choose the most suitable algorithm based on the coherence measure.
+
+Next, for each cluster, we build time series of topic popularity and apply three forecasting models: Prophet, ARIMA, and Exponential Smoothing. We compare the quality of the forecasts obtained using these models using the Mean Absolute Error (MAE) and Mean Squared Error (MSE) metrics.
+
+The code for this experiment is available at: \url{https://github.com/LoveMyWork/2024-Project-167/tree/master/src}
+
+\subsection{Experiment Results}
+
+\subsubsection{Clustering Summary}
+
+The clustering results are presented in Table \ref{tab:ClusteringPivotTable}. According to the criteria described in the "Topic Clustering" section, the "Embedding + K means" algorithm was chosen, as it shows metrics slightly worse than LDA (by 0.06), but significantly outperforms it.
+
+% According to criteria in the Theory part, the algorithm “Embedding + K means” was chosen. The pivot table of metrics for the selected models are as follows \ref{tab:ClusteringPivotTable}:
+
+% The LDA algorithm is better according to the Mean Coherence metric. Furthermore, it has more stable per-cluster Coherence than Embeddings + K-Means algorithm. Therefore, we have chosen to utilize LDA  for further analysis. In the next section, we apply the forecast model to clusters-outcomes after LDA clustering.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Model} & \textbf{Mean Coherence} & \multicolumn{1}{c|}{\textbf{Coherence}} \\ \hline
+K-means        & 0.63                & 0.69                                    \\ \hline
+LDA            & 0.693          & 0.71                                    \\ \hline
+\end{tabular}
+\caption{Resulted metrics of each algorithm. The error calculated by “error of the mean” formula.
+}
+\label{tab:ClusteringPivotTable}
+\end{table}
+
+
+% \subsubsection{Theory}
+% The metric coherence was chosen since it … <why it is a proper choice>. The algorithm of coherence calculation is described at \cite{roder2015exploring}. The main steps are <some summary of algorithm>.
+
+% ``` Добавлю
+% Как считаются все возможные coherence описано в этой статье (https://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf)
+% В нашем случае 'c_v' описана в таблице 2 и основывается на формуле 23, если я правильно понял
+% ```
+
+
+% -------------------------МОЖНО в АПЕНДИКС---------------------
+
+The next two subsections outline the hyperparetor optimisation of the compared algorithms and their clustering results.
+
+\subsubsection{Embeddings + K-Means}
+To determine the optimal number of clusters (K), we evaluated several metrics. The mean coherence score, which quantifies the interpretability of clusters to humans by measuring the semantic similarity among the top words within a cluster. The optimal number of clusters was found to be 16, as shown in the figure:
+
+\begin{figure}[h] % picture
+    \centering
+    \includegraphics[width=15cm,height=6cm,keepaspectratio]{MeanCohKMeans.png}
+    \label{fig:MeanCohKMeans}
+    \caption{Coherence score vs. number of clusters for the Embeddings + K-Means algorithm.}
+\end{figure}
+
+\newpage
+The resulting clustering with expert interpretation is presented at Table  \ref{tab:KmeansClusters}. The mean coherence score for the 16 clusters was 0.63.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{1}{|c|}{\textbf{Cluster}} & \multicolumn{1}{c|}{\textbf{Interpretation}}                    & \multicolumn{1}{c|}{\textbf{$C_{cv}$}} \\ \hline
+0                                         & NFL                                                             & 0.63                                    \\ \hline
+1                                         & Football                                                        & 0.43                                    \\ \hline
+2                                         & Motivational Hashtags                                           & 0.75                                    \\ \hline
+3                                         & Sports Personalities                                            & 0.58                                    \\ \hline
+4                                         & Entertainment                                   & 0.58                                    \\ \hline
+5                                         & Music                                                           & 0.55                                    \\ \hline
+6                                         & Politics and Holidays                                           & 0.73                                    \\ \hline
+7                                         & UFC                                                             & 0.74                                    \\ \hline
+8                                         & Emotional Hashtags                                              & 0.70                                    \\ \hline
+9                                         & Social events Hashtags                                          & 0.73                                    \\ \hline
+10                                        & Political Figures and Events                                    & 0.59                                    \\ \hline
+11                                        & Basketball                                                      & 0.37                                    \\ \hline
+12                                        & Celebrities and Personalities                                   & 0.65                                    \\ \hline
+13                                        & Business                                                        & 0.65                                    \\ \hline
+14                                        & World Events and Countries                                      & 0.71                                    \\ \hline
+15                                        & Entertainment                                                   & 0.68                                    \\ \hline
+Mean                                      & -                                                               & 0.63                                    \\ \hline
+\end{tabular}
+\caption{Embed+Kmeans clustering result}
+\label{tab:KmeansClusters}
+\end{table}
+% //////////////
+
+
+
+
+
+% ///////////////
+
+
+
+The Embeddings + K-Means approach demonstrated good thematic coherence within the clusters, allowing for meaningful interpretation and subsequent forecasting. The clusters captured distinct themes, such as business, sports, politics, and entertainment, providing a solid foundation for the time series forecasting component of the study.
+Examples, references to the algorithms, clustering images and other details of the Embeddings + K-Means algorithms are given in the appendix.
+
+
+\subsubsection{Latent Dirichlet Allocation (LDA) on Topics}
+
+To address the limitations of the embedding-based approach, we explored topic modeling using Latent Dirichlet Allocation (LDA) \cite{blei2003latent} directly on the topic representations. This allowed us to capture the latent thematic structures within the data.
+
+According to the plot there is no dependence of LDA on the number of clusters. Therefore, to provide a more accurate comparison, we set 16 clusters and calculated the Coherence metrics (Table ). 
+\begin{figure}[h] 
+    \centering
+    \includegraphics[width=15cm,height=6cm,keepaspectratio]{Mean_coherence_metric_vs_clusters.png}
+    \label{fig:MeanCohKMeans}
+    \caption{Mean coherence score vs number of clusters}
+\end{figure}
+
+\newpage
+According to the plot there is no dependence of LDA on the number of clusters. Therefore, to provide a more accurate comparison, we set 16 clusters and calculated the Coherence metrics (Table \ref{tab:LDAClusters}). 
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{1}{|c|}{\textbf{Cluster}}  & \multicolumn{1}{c|}{\textbf{$C_{cv}$}} \\ \hline
+0                                                                                       & 0.69                                    \\ \hline
+1                                                                                       & 0.71                                    \\ \hline
+2                                                                                       & 0.68                                    \\ \hline
+3                                                                                      & 0.67                                    \\ \hline
+4                                                                                       & 0.70                                    \\ \hline
+5                                                                                       & 0.71                                    \\ \hline
+6                                                                                      & 0.67                                    \\ \hline
+7                                                                                      & 0.71                                    \\ \hline
+8                                                                                       & 0.69                                    \\ \hline
+9                                                                                       & 0.68                                    \\ \hline
+10                                                                                      & 0.68                                    \\ \hline
+11                                                                                      & 0.72                                    \\ \hline
+12                                                                                      & 0.71                                    \\ \hline
+13                                                                                     & 0.71                                    \\ \hline
+14                                                                                     & 0.69                                    \\ \hline
+15                                                                                      & 0.67                                    \\ \hline
+Mean                                       -                                            & 0.69                                    \\ \hline
+\end{tabular}
+\caption{LDA clustering result}
+\label{tab:LDAClusters}
+\end{table}
+
+% \subsubsection{Summary}
+% According to criteria in the beginning of the Theory part, the algorithm “Embedding + K means” was chosen. The pivot table of metrics for the selected models are as follows:
+
+% The LDA algorithm is better according to the Mean Coherence metric. Furthermore, it has more stable per-cluster Coherence than Embeddings + K-Means algorithm. Therefore, we have chosen to utilize LDA  for further analysis. In the next section, we apply the forecast model to clusters-outcomes after LDA clustering.
+
+% \begin{table}[h]
+% \centering
+% \begin{tabular}{|l|l|l|}
+% \hline
+% \textbf{Model} & \textbf{Mean Coherence} & \multicolumn{1}{c|}{\textbf{Coherence}} \\ \hline
+% K-means        & 0.63                & 0.69                                    \\ \hline
+% LDA            & 0.693          & 0.71                                    \\ \hline
+% \end{tabular}
+% \caption{Resulted metrics of each algorithm. The error calculated by “error of the mean” formula.
+% }
+% \label{tab:ClusteringPivotTable}
+% \end{table}
+
+In the next section, we apply the forecast model to clusters-outcomes after Embeddings + K-Means.
+
+
+\subsection{Forecasting}
+
+% \subsubsection{Theory}
+
+% In this Section different architectures are applied to forecast popularity of topics. The input of the models is a week-by-week time series of clustered social media topics X, the prediction is a set of integer numbers $N_i$ – the counts of posts, containing the cluster i in the next timestep (week).
+
+%<Дописать, что по сути создаются N разных моделей (N разных наборов гиперпараметров) под предсказание числа постов каждого кластера в отдельности>
+% Three models were investigated during the research. The first one is the Prophet, developed by researchers at Facebook's Core Data Science team. It is a decomposable time series model that combines several fundamental components to capture the dynamics of a time series \cite{Taylor2018}. The key advantages of the Prophet model include its ability to handle various types of time series patterns, such as seasonality, trend changes, and outliers, as well as its scalability and ease of use. Basic steps of the algorithm are [add description from habr post]. For a more detailed description one can read [link! from habr post].
+% The second model called ARIMA works like [add description with links] \cite{holt2004forecasting}. 
+% The last model we experimented with is Exponential Smoothing  \cite{Gardner1985}. The algorithm of its operation is [add description with links].
+% Since all the models were evaluated on the same dataset, the MAE and MSE metrics were chosen to compare their quality.
+
+\subsubsection{Prophet model}
+
+% The forecasting component of the proposed framework represents a crucial step in predicting future trends in the media landscape. To address the challenge of accurately forecasting complex and volatile time series data, the study employed a state-of-the-art forecasting model, the Prophet algorithm [3].
+After applying the Embedding algorithm, we conducted forecasts for each result. The following table presents the final Prophet metrics for the forecasts for 30 days period \ref{tab:ProphetMetrics}:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Clusters Count} & \textbf{Average MAE} & \textbf{Average MSE} \\ \hline
+5                       & 0.22                 & 0.08                 \\ \hline
+7                       & 0.23                 & 0.08                 \\ \hline
+9                       & 0.25                 & 0.10                 \\ \hline
+16                      & 0.28                 & 0.13                 \\ \hline
+\end{tabular}
+\caption{Resulted Prophet metrics.}
+\label{tab:ProphetMetrics}
+\end{table}
+
+Considering the complexity of the task, we find these results satisfactory.
+
+% На Рисунках \ref{fig:ProphetPreds} и \ref{fig:ProphetPreds_political} показаны примеры прогнозов модели Prophet для кластеров, связанных с американским футболом и политикой. Модель успешно улавливает сезонность и жизненный цикл этих тематик.
+
+For the American football cluster and Political cluster, the Prophet model was able to accurately capture the seasonality and life cycle of the topic, as shown in the following figures:
+
+\begin{figure}[h]
+  \begin{minipage}{0.5\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{ProphetPreds.png}
+  \end{minipage}\hfill
+  \begin{minipage}{0.5\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{ProphetPreds_political.png}
+  \end{minipage}
+  \caption{Prophet forecast for American football cluster.}
+\end{figure}
+
+
+% \begin{figure}[h] 
+%     \centering
+%     \includegraphics[width=15cm,height=6cm,keepaspectratio]{ProphetPreds.png}
+%     \label{fig:ProphetPreds}
+%     \caption{Prophet forecast for American football and Political clusters.}
+% \end{figure}
+
+
+\begin{figure}[h] 
+    \centering
+    \includegraphics[width=15cm,height=6cm,keepaspectratio]{Prophet_components_American_football.jpg}
+    \label{fig:Prophet_components_American_football}
+    \caption{Prophet trend and cycle components for American football cluster.}
+\end{figure}
+
+% \begin{figure}[h] 
+%     \centering
+%     \includegraphics[width=15cm,height=6cm,keepaspectratio]{ProphetPreds_political.png}
+%     \label{fig:ProphetPreds_political}
+%     \caption{Prophet forecast for Political cluster.}
+% \end{figure}
+
+% -----------------------------------------------------------------------------------
+
+\newpage
+Compared to the ARIMA and Exponential Smoothing models (Tables \ref{tab:ARIMAMetrics} and \ref{tab:ExpSmoothingMetrics}), the Prophet model shows better metrics, especially for the Political cluster, which demonstrates more complex temporal characteristics.
+
+
+% \subsubsection{ARIMA}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Cluster} & \textbf{Average MAE} & \textbf{Average MSE} \\ \hline
+Basketball players & 0.413 & 0.240 \\ \hline
+Social events & 0.390 & 0.226 \\ \hline
+Political & 0.485 & 0.417 \\ \hline
+Business & 0.497 & 0.379 \\ \hline
+Global News & 0.445 & 0.325 \\ \hline
+American football Teams & 0.615 & 0.532 \\ \hline
+Music & 0.437 & 0.265 \\ \hline
+Motivational Day journaling & 0.275 & 0.114 \\ \hline
+Football, Basketball, other Teams & 0.527 & 0.403 \\ \hline
+Average & 0.454 & 0.322 \\ \hline
+\end{tabular}
+\caption{Resulted ARIMA metrics.}
+\label{tab:ARIMAMetrics}
+\end{table}
+
+
+% \subsubsection{Exponential Smoothing}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Cluster} & \textbf{Average MAE} & \textbf{Average MSE} \\ \hline
+Basketball players & 0.335 & 0.204 \\ \hline
+Social events & 0.437 & 0.269 \\ \hline
+Political & 0.514 & 0.482 \\ \hline
+Business & 0.461 & 0.278 \\ \hline
+Global News & 0.413 & 0.299 \\ \hline
+American football Teams & 0.525 & 0.375 \\ \hline
+Music & 0.459 & 0.255 \\ \hline
+Motivational Day journaling & 0.058 & 0.008 \\ \hline
+Football, Basketball, other Teams & 0.601 & 0.471 \\ \hline
+Average & 0.422 & 0.293 \\ \hline
+\end{tabular}
+\caption{Resulted Exponential Smoothing metrics.}
+\label{tab:ExpSmoothingMetrics}
+\end{table}
+
+
+\newpage
+The ARIMA and exponential smoothing models demonstrated suboptimal forecasting accuracy for the "Political" cluster relative to our approach
+
+\begin{figure}[h] 
+    \centering
+    \includegraphics[width=15cm,height=6cm,keepaspectratio]{ProphetWin_30days.png}
+    \label{fig:ProphetPreds}
+    \caption{Forecast for 30 days.}
+\end{figure}
+
+\begin{figure}[h]
+  \begin{minipage}{0.5\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{ProphetWin_180days.png}
+  \end{minipage}\hfill
+  \begin{minipage}{0.5\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{ProphetWin_90days.png}
+  \end{minipage}
+  \caption{Forecast for 180 фтв 90 days.}
+\end{figure}
+
+% ----------
+
+% \begin{figure}[h] 
+%     \centering
+%     \includegraphics[width=15cm,height=6cm,keepaspectratio]{ProphetWin_180days.png}
+%     \label{fig:ProphetPreds}
+%     \caption{Forecast for Political cluster.}
+% \end{figure}
+
+
+% \begin{figure}[h] 
+%     \centering
+%     \includegraphics[width=15cm,height=6cm,keepaspectratio]{ProphetWin_90days.png}
+%     \label{fig:ProphetPreds}
+%     \caption{Forecast for Political cluster.}
+% \end{figure}
+
+
+
+
+This finding implies that the time series characteristics of the "Political" cluster, such as trend, seasonality, or other complex patterns , may not be adequately captured by the exponential smoothing or and ARIMA approaches for 180 or 90 or 30 days period.
+
+
+\section{Conclusion}
+By modeling the unique characteristics and life cycles of each thematic cluster, our framework is able to provide more nuanced and accurate predictions of future media trends. The model is able to capture unique patterns in the data that simpler models, such as ARIMA or Exponential Smoothing, do not account for.
+
+In the appendix, we provide a detailed explanation of the calculation process and metrics for each cluster. You can find the code in the 'prophet\_num.ipynb' notebook. We have also documented our experiments, successes, and failures in the 'research\_Clustering\_v3\_LDA copy.ipynb' notebook.
+
+However, the study also identified limitations in the forecasting performance for some clusters, which exhibited peculiarities such as abrupt peaks, trend shifts, and seasonal displacements. These anomalies in the time series presented challenges for traditional regression-based forecasting methods, including the Prophet model.
+
+To address this issue, the study identified the need to explore existing algorithms specifically designed for anomaly detection and forecasting in time series data. The investigation and implementation of such algorithms are outlined in the "Future Research Directions" section, as they hold the potential to enhance the predictive capabilities of the proposed framework across a wider range of topic clusters.By leveraging the strengths of the Prophet model and addressing the limitations through the exploration of anomaly forecasting algorithms, this study lays the foundation for a robust and comprehensive framework for predicting trends in the dynamic and complex media landscape.
+
+\subsection{Future Research Directions}
+The key future research directions include:
+
+\begin{itemize}
+\item \textbf{Refinement of Topic Modeling}: Further investigation of topic modeling on longer text inputs, such as using a phrase-to-paragraph generation approach, to enhance the predictive capabilities of the proposed method.
+\item \textbf{Anomaly Forecasting Algorithms}: Implementation and evaluation of algorithms capable of accurately forecasting various anomalies in time series, such as abrupt peaks, trend shifts, and seasonal displacements.
+\item \textbf{Multivariate Forecasting}: Exploration of incorporating additional features, such as external events, sentiments, and demographic data, to improve the overall predictive performance.
+\item \textbf{Differentiated Predictions for Social Groups}: Implementation of the social group interest predictions, leveraging the unique relevance level metric based on the proximity of clusters on the dendrogram. This will provide more detailed and efficient prediction of future topics of conversation for specific audience segments.
+\item \textbf{Cross-Domain Validation}: Applying the proposed framework to different domains, such as scientific publication trends or product demand forecasting, to validate its generalizability and adaptability.
+\end{itemize}
+
+By addressing these future research directions, this study can contribute to the advancement of time series forecasting techniques, particularly in the context of complex, high-dimensional, and volatile media landscapes. The successful implementation of this approach can have significant practical implications for various industries, from marketing and media production to innovation research and development.
+
+
+
+
+
+
+\bibliographystyle{unsrt}  
+\bibliography{references} 
+
+
+
+%%% Remove comment to use the external .bib file (using bibtex).
+%%% and comment out the ``thebibliography'' section.
+
+
+% %%% Comment out this section when you \bibliography{references} is enabled.
+% \begin{thebibliography}{1}
+
+% \bibitem{Taylor2018}
+% Taylor, S. J. and Letham, B. (2018). Forecasting at scale. {\em The American Statistician}, 72(1):37--45. doi:10.1080/00031305.2017.1380080. https://peerj.com/preprints/3190/
+% \bibitem{Reimers2019}
+% Reimers, N. and Gurevych, I. (2019). Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. {\em arXiv preprint arXiv:1908.10084}. https://arxiv.org/abs/1908.10084
+% \bibitem{Motrenko2014}
+% Motrenko, A. and Strijov, V. (2014). Extracting fundamental periods to segment biomedical signals. https://m1p.org/papers/MotrenkoStrijov2014RV2.pdf
+% \bibitem{Das2020VAE}
+% Das, A. (2020). Foundation of Variational Autoencoder (VAE). https://ayandas.me/blog-tut/2020/01/01/variational-autoencoder.html
+% \bibitem{Grabovoy2019}
+% Grabovoy, A. V. and Strijov, V. V. (2019). Quasi-periodic time series clustering for human activity recognition. https://m1p.org/papers/Grabovoy2019QuasiPeriodicTimeSeries.pdf
+% \bibitem{Uvarov2018}
+% Uvarov, N. D., Kuznetsov, M. P., Malkova, A. S., Rudakov, K. V., and Strijov, V. V. (2018). Selection of superposition of models for railway freight forecasting. https://m1p.org/papers/Uvarov2018SuperpositionForecasting_eng.pdf
+% \bibitem{Shumway2000}
+% Shumway, R. H., Stoffer, D. S., and Stoffer, D. S. (2000). {\em Time series analysis and its applications}, volume 3. Springer.
+% \bibitem{Gardner1985}
+% Gardner, E. S. (1985). Exponential smoothing: The state of the art. {\em Journal of Forecasting}.
+% \bibitem{Bouchaud2018}
+% Bouchaud, J.-P., Bonart, J., Donier, J., and Gould, M. (2018). {\em Trades, Quotes and Prices, Financial Markets Under the Microscope}. Cambridge University Press. https://www.cambridge.org/core/books/trades-quotes-and-prices/029A71078EE4C41C0D5D4574211AB1B5
+% \bibitem{Garleanu2013}
+% Gˆarleanu, N. and Pedersen, L. H. (2013). Dynamic Trading with Predictable Returns and Transaction Costs. https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1364170
+% \bibitem{TwitterTrends}
+% Twitter Trending Tweets. https://www.kaggle.com/datasets/rsrishav/twitter-trending-tweets
+% \bibitem{YouTubeTrends}
+% YouTube Trending Video Dataset. https://www.kaggle.com/datasets/rsrishav/youtube-trending-video-dataset
+% \bibitem{SentenceTransformers}
+% Sentence Transformers: all-MiniLM-L12-v2 t. https://huggingface.co/sentence-transformers/all-MiniLM-L12-v2
+
+
+
+
+
+
+\end{document}
