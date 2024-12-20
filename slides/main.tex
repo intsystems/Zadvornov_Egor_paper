@@ -1,192 +1,389 @@
-\documentclass[10pt,pdf,hyperref={unicode}]{beamer}
-
-\mode<presentation>
-{
-\usetheme{boxes}
+\documentclass{beamer}
 \beamertemplatenavigationsymbolsempty
-
+\usecolortheme{beaver}
+\setbeamertemplate{blocks}[rounded=true, shadow=true]
 \setbeamertemplate{footline}[page number]
-\setbeamersize{text margin left=0.5em, text margin right=0.5em}
-}
-
+%
 \usepackage[utf8]{inputenc}
-\usepackage[english, russian]{babel}
-\usepackage{bm}
-\usepackage{multirow}
-\usepackage{ragged2e}
-\usepackage{indentfirst}
-\usepackage{multicol}
+\usepackage[english,russian]{babel}
+\usepackage{amssymb,amsfonts,amsmath,mathtext}
 \usepackage{subfig}
-\usepackage{amsmath,amssymb}
-\usepackage{enumerate}
-\usepackage{mathtools}
-\usepackage{comment}
-\usepackage{multicol}
+\usepackage[all]{xy} % xy package for diagrams
+\usepackage{array}
+\usepackage{multicol}% many columns in slide
+\usepackage{hyperref}% urls
+\usepackage{hhline}%tables
 
-\usepackage[all]{xy}
 
-\usepackage{tikz}
-\usetikzlibrary{positioning,arrows}
+% FOR framing
+\usepackage{arydshln}
+\usepackage{array}
 
-\tikzstyle{name} = [parameters]
-\definecolor{name}{rgb}{0.5,0.5,0.5}
 
-\usepackage{caption}
-\captionsetup{skip=0pt,belowskip=0pt}
-
-\newtheorem{rustheorem}{Теорема}
-\newtheorem{russtatement}{Утверждение}
-\newtheorem{rusdefinition}{Определение}
-
-% colors
-\definecolor{darkgreen}{rgb}{0.0, 0.2, 0.13}
-\definecolor{darkcyan}{rgb}{0.0, 0.55, 0.55}
-
-\AtBeginEnvironment{figure}{\setcounter{subfigure}{0}}
-
-\captionsetup[subfloat]{labelformat=empty}
+% Your figures are here:
+\graphicspath{ {fig/} {../fig/} }
 
 %----------------------------------------------------------------------------------------------------------
+\title[Прогнозирование высоковолатильностых временных рядов социальных трендов и общественных интересов]{Прогнозирование высоковолатильностых временных рядов социальных трендов и общественных интересов}
 
-\title[Пример слайдов по работе]{Пример слайдов по работе \\ курса}
-\author{И.\,О.\,Фамилия}
-
-\institute[]{Московский физико-технический институт}
-\date[2022]{\small 10\;февраля\;2022\,г.}
-
-%---------------------------------------------------------------------------------------------------------
+\author[Е.\,В. Задворнов]{Егор Валерьевич Задворнов}
+\institute{Московский физико-технический институт}
+\date{\footnotesize
+\par\smallskip\emph{Научный руководитель:} А.\,С.~Малков
+\par\bigskip\small 2024}
+%----------------------------------------------------------------------------------------------------------
 \begin{document}
-
+%----------------------------------------------------------------------------------------------------------
 \begin{frame}
-\titlepage
+\thispagestyle{empty}
+\maketitle
+\end{frame}
+%-----------------------------------------------------------------------------------------------------
+\begin{frame}{Цель исследования}
+     \begin{block}{Цели}
+
+     Основная цель - прогнозирование временных рядов социальных трендов и общественных интересов, характеризующихся высокой волатильностью
+     
+     \begin{itemize}
+         \item разработать методы кластеризации топиков общественных интересов
+         \item сравнить качество моделей Prophet, Arima, Exp smoothig в задаче предсказания полученных кластеров по метрике семантического расстояния
+     \end{itemize}
+     \end{block}
+
+ \end{frame}
+
+%-----------------------------------------------------------------------------------------------------
+% \begin{frame}{Доклад с одним слайдом}
+
+% % \centering \begin{block}{Research Pipeline} 
+
+% \begin{figure}
+% \includegraphics[width=1.0\textwidth]{pipeline.png}
+%     % \caption{Research Pipeline}
+% \end{figure}
+% % \end{block}
+% \begin{columns}[c]
+
+
+% \column{0.55\textwidth}
+
+
+% \begin{figure}
+% \includegraphics[width=1.0\textwidth]{ProphetWin_90days_largefontsize.png}
+% % \caption{Prophet превзошёл всех}
+% \end{figure}
+
+
+
+% \column{0.45\textwidth}
+% \begin{figure}
+% \includegraphics[width=1.0\textwidth]{ProphetPreds_largefontsize.png}
+%     % \caption{Research Pipeline}
+% \end{figure}
+% \end{columns}
+% \end{frame}
+
+
+% \begin{figure}[h] 
+%     \centering
+%     \includegraphics[width=15cm,height=6cm,keepaspectratio]{ProphetPreds.png}
+%     \label{fig:ProphetPreds}
+%     \caption{Prophet forecast for American football cluster.}
+% \end{figure}
+
+% \begin{figure}[h] 
+%     \centering
+%     \includegraphics[width=10cm,height=6cm,keepaspectratio]{ProphetWin_90days_largefontsize.png}
+%     \label{fig:ProphetPreds}
+%     \caption{Prophet forecast for American football cluster.}
+% \end{figure}
+% \begin{frame}
+
+% \end{frame}
+% \begin{columns}[c]
+
+% \column{0.6\textwidth}
+% \includegraphics[width=1.0\textwidth]{pipeline}
+%     Общая схема предложенного подхода
+% \column{0.4\textwidth}
+%     Ключевые этапы включают:
+%     \begin{itemize}
+%         \item Предобработку и кластеризацию данных
+%         \item Оценку значимости трендов
+%         \item Прогнозирование временных рядов
+%         \item Объединение прогнозов
+%         \item Обнаружение аномалий и улучшение прогнозирования
+%     \end{itemize}
+% \end{columns}
+
+% \end{frame}
+
+
+%----------------------------------------------------------------------------------------------------------
+\begin{frame}{Постановка задачи}
+
+Пусть $T = \{T^k\}_{k=1}^K$ -- множество уникальных топиков, где $K$ -- общее число различных топиков. Имеется временной ряд $\{t_i\}_{i=1}^N$, соответствующий последовательности дат, и на каждую дату $t_i$ приходится набор $\{T_{ij}\}_{j=1}^{M_i}$ популярных топиков, где $M_i$ -- число популярных топиков в день $t_i$. Каждый $T_{ij} \in T$ представляет собой одно слово или фразу длиной до 4 слов.
+
+
+Цель данной работы – предсказать будущую популярность топиков. Для достижения этой цели предла-
+гается следующий алгоритм:
+\end{frame}
+%----------------------------------------------------------------------------------------------------------
+
+\begin{frame}{Визуализация данных}
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Time} & \textbf{Source} & \textbf{Topic}           \\ \hline
+2024-03-03    & Twitter         & Rashford                 \\ \hline
+2024-03-03    & Twitter         & \#sundayvibes            \\ \hline
+2024-03-03    & Twitter         & Xavier Worthy            \\ \hline
+2024-03-03    & Twitter         & Foden                    \\ \hline
+2024-03-03    & Twitter         & \#UFCVegas87             \\ \hline
+...           & ...             & ...                      \\ \hline
+2017-03-18    & Google          & Robert Osborne           \\ \hline
+2017-03-18    & Google          & Alejandra Campoverdi     \\ \hline
+2017-03-18    & Google          & Drake More Life          \\ \hline
+2017-03-18    & Google          & Drake More Life Download \\ \hline
+2017-03-18    & Google          & Costco Travel            \\ \hline
+\end{tabular}
+\caption{Sample of data}
+\label{tab:timefromtime}
+\end{table}
+
+
+\end{frame}
+% ----------------------------------------------
+
+\begin{frame}{Решение}
+Ключевые элементы решения:
+\centering
+\includegraphics[width=11cm,height=8cm,keepaspectratio]{pipeline}
+\caption{Общая схема предложенного подхода}
+
+% \begin{itemize}
+%     \item Многоуровневая кластеризация тем с использованием эмбеддингов и тематического моделирования
+%     \item Оценка значимости кластеров на основе их позиционирования в медиа-ландшафте
+%     \item Применение модели Пророка для прогнозирования временных рядов каждого кластера
+%     \item Объединение прогнозов кластеров для получения комплексного прогноза
+%     \item Исследование методов обнаружения аномалий для улучшения прогнозирования
+% \end{itemize}
+\end{frame}
+%----------------------------------------------------------------------------------------------------------
+\begin{frame}{Вычислительный эксперимент}
+% \begin{frame}{Кластеризация}
+1. Выполняется кластеризация множества $T$ на $n$ семантических кластеров $c_m = \{T^k\}_{k=1}^{n_m}$, $m = 1, \ldots, n$, где $n_m$ -- число топиков в кластере $c_m$. 
+
+Для определения оптимального числа кластеров $n$ используется средняя мера когерентности $C_{\text{cv}}$, которая оценивает интерпретируемость кластеров человеком путем измерения семантической близости между словами внутри кластера:
+
+\begin{equation}
+n = \arg\min_{L \in \mathbb{N}} \frac{1}{L} \sum_{m=0,...,L-1} C_{\text{cv}}(c_m)
+\end{equation}
+
+
+\begin{equation}
+C_{\text{cv}} = \frac{1}{|S^{\text{one}}_{\text{set}}|} \sum_{(W_0, W_*) \in S^{\text{one}}_{\text{set}}} \tilde{m}_{\cos(\text{nlr}, 1)}(W_0, W_*)
+\end{equation}
+
+\end{frame}
+
+
+
+
+%----------------------------------------------------------------------------------------------------------
+\begin{frame}{Вычислительный эксперимент}
+% \begin{frame}{Прогнозирование популярности топиков}
+2. Для каждого кластера $c_m$ строится временной ряд $\{t_i, y_m^i\}_{i=1}^N$, где $y_m^i$ -- число появлений топиков из кластера $c_m$ в день $t_i$.
+
+
+Prophet
+\begin{equation}
+y(t) = g(t) + s(t) + h(t) + \epsilon_t
+\end{equation}
+
+SARIMA
+\begin{equation}
+(1-\phi_1 B) (1-\Phi_1 B^m)(1-B)^d(1-B^m)^D y_t = (1+\theta_1 B) (1+\Theta_1 B^m)\epsilon_t
+\end{equation}
+
+Метод Хольта-Винтерса (Exponential Smoothing)
+\begin{equation}
+\hat{y}_{t+h|t} = l_t + h b_t + s_{t+h-m(k+1)}
+\end{equation}
+
+
+\end{frame}
+
+
+
+
+
+
+% -------------------------------------
+
+
+
+% -------------------------------------
+% \begin{frame}{Вычислительный эксперимент}
+% Результаты прогнозирования на реальных данных:
+% \begin{itemize}
+%     \item Модель Пророка продемонстрировала высокую точность прогнозирования для кластеров, связанных с американским футболом и политикой
+%     \item Для некоторых кластеров, характеризующихся резкими пиками и изменениями трендов, традиционные методы прогнозирования показали ограниченную эффективность
+%     \item Средняя ошибка прогноза (MAPE) составила 28\%, что характеризует хорошее качество прогнозов в рамках поставленной задачи
+% \end{itemize}
+% \includegraphics[width=0.8\textwidth]{prophet_forecast}
+% \end{frame}
+%----------------------------------------------------------------------------------------------------------
+\begin{frame}{Результаты кластеризации}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Model} & \textbf{Mean Coherence} & \multicolumn{1}{c|}{\textbf{Coherence}} \\ \hline
+K-means        & 0.63              & 0.69                                    \\ \hline
+LDA            & 0.69         & 0.71                                    \\ \hline
+\end{tabular}
+% \caption{Resulted metrics of each algorithm. The error calculated by “error of the mean” formula.
+% }
+\label{tab:ClusteringPivotTable}
+\end{table}
+
+% The LDA algorithm is better according to the Mean Coherence metric. Furthermore, it has more stable per-cluster Coherence than Embeddings + K-Means algorithm. Therefore, we have chosen to utilize LDA  for further analysis. In the next section, we apply the forecast model to clusters-outcomes after LDA clustering.
 \end{frame}
 
 %----------------------------------------------------------------------------------------------------------
-\section{Слайд об исследованиях}
-\begin{frame}{Слайд об исследованиях}
-\bigskip
-Исследуется проблема \ldots.
-\begin{block}{Цель исследования~---}
-предложить метод \ldots.
-\end{block}
-\begin{block}{Требуется предложить}
-\justifying
-\begin{enumerate}[1)]
-\item метод \ldots,
-\item метод \ldots,
-\item метод \ldots.
-\end{enumerate}
-\end{block}
-\begin{block}{Решение}
-Для \ldots.
-\end{block}
-\end{frame}
+\begin{frame}{Результаты прогнозирования}
 
-%---------------------------------------------------------------------------------------------------------
-\section{Постановка задачи \ldots}
-\begin{frame}{Постановка задачи \ldots}
-Заданы
-\begin{enumerate}[1)]
-    \item признаки \ldots,
-    \item целевая переменная \ldots,
-    \item \ldots.
-\end{enumerate}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Model} & \textbf{Average MAE} & \textbf{Average MSE} \\ \hline
+Prophet         & 0.251               & 0.101               \\ \hline
+ARIMA           & 0.454               & 0.322               \\ \hline
+Exponential Smoothing & 0.422         & 0.293               \\ \hline
+\end{tabular}
+% \caption{Comparison of Average MAE and MSE for Prophet, ARIMA, and Exponential Smoothing models.}
+\label{tab:ModelComparison}
+\end{table}
 
-\ldots
+% \begin{table}[h]
+% \centering
+% \begin{tabular}{|l|l|l|}
+% \hline
+% \textbf{Model} & \textbf{Average MAE} & \textbf{Average MSE} \\ \hline
+% \textbf{Prophet} & \textbf{0.251} & \textbf{0.101} \\ \hline
+% ARIMA           & 0.454               & 0.322               \\ \hline
+% Exponential Smoothing & 0.422         & 0.293               \\ \hline
+% \end{tabular}
+% \caption{Comparison of Average MAE and MSE for Prophet, ARIMA, and Exponential Smoothing models.}
+% \label{tab:ModelComparison}
+% \end{table}
 
-\bigskip
+% \begin{table}[h]
+% \centering
+% \begin{tabular}{|l|l|l|}
+% \hline
+% \textbf{Clusters Count} & \textbf{Average MAE} & \textbf{Average MSE} \\ \hline
+% 5                       & 0.22                 & 0.08                 \\ \hline
+% 7                       & 0.23                 & 0.08                 \\ \hline
+% 9                       & 0.25                 & 0.10                 \\ \hline
+% 16                      & 0.28                 & 0.13                 \\ \hline
+% \end{tabular}
+% \caption{Resulted Prophet metrics.}
+% \label{tab:ProphetMetrics}
+% \end{table}
 
-Требуется выбрать модель \ldots из множества
-\[
-	\mathfrak{G} = \left\{\mathbf{g}| \mathbf{g}:\mathbb{R}^{n} \to \mathbb{Y}^\prime\right\}.
-\]
-Оптимизационная задача \ldots:
-\[
-	\mathbf{g} = \arg\min_{\mathbf{g} \in \mathfrak{G}} \mathcal{L}\bigr(\ldots\bigr),
-\]
-где $\mathcal{L}$~--- функция ошибки.
+% For the American football cluster and Political cluster, the Prophet model was able to accurately capture the seasonality and life cycle of the topic, as shown in the following figures:
 
-\bigskip
-\footnotetext[1]{\textit{Lopez-Paz D., Bottou L., Scholkopf B., Vapnik V.} Unifying distillation and privileged information // ICLR, 2016.}
-\footnotetext[2]{\textit{Hinton G., Vinyals O., Dean J.} Distilling the knowledge in a neural network // NIPS, 2015.}
-\end{frame}
-
-%----------------------------------------------------------------------------------------------------------
-\section{Предложенный метод \ldots}
-\begin{frame}{Предложенный метод \ldots}
-~\\[-1mm]
-Заданы
-\begin{enumerate}[1)]
-	\item \ldots,
-	\item \ldots.
-\end{enumerate}
-
-\medskip
-Параметрические семейства:
-\[
-\setlength\abovedisplayskip{0pt}
-\mathfrak{F} = \left\{\mathbf{f}| \mathbf{f} = \text{softmax}\bigr(\mathbf{v}\bigr(\mathbf{x}\bigr)/T\bigr), \quad \mathbf{v}: \mathbb{R}^{n} \to \mathbb{R}^K \right\},
-\]
-\[
-\mathfrak{G} = \left\{\mathbf{g}| \mathbf{g} = \text{softmax}\bigr(\mathbf{z}\bigr(\mathbf{x}\bigr)/T\bigr), \quad \mathbf{z}: \mathbb{R}^n \to \mathbb{R}^K \right\},
-\]
-где~\ldots.
-
-\medskip
-Функция ошибки
-\[
-\setlength\abovedisplayskip{0pt}
-\begin{aligned}
-   \mathcal{L}\bigr(\mathbf{g}\bigr) = &-\sum_{i=1}^{m}\underbrace{{\sum_{k=1}^{K}y^k_i\log\mathbf{g}\bigr(\mathbf{x}_i\bigr)\bigr|_{T=1}}}_{\text{исходная функция потерь}}- \sum_{i=1}^{m}\underbrace{{\sum_{k=1}^{K}\mathbf{f}\bigr(\mathbf{x}_i\bigr)\bigr|_{T=T_0}\log\mathbf{g}\bigr(\mathbf{x}_i\bigr)\bigr|_{T=T_0}}}_{\text{слагаемое дистилляции}},
-\end{aligned}
-\setlength\belowdisplayskip{0pt}
-\]
-где~\ldots.
-
-Оптимальная модель выбирается из класса,
-$\hat{\mathbf{g}} = \arg\min\limits_{\mathbf{g} \in \mathfrak{G}_{\text{cl}}} \mathcal{L}\bigr(\mathbf{g}\bigr).$
-\end{frame}
-
-%----------------------------------------------------------------------------------------------------------
-\section{Анализ предложенного метода \ldots}
-\begin{frame}{Анализ предложенного метода \ldots}
-\justifying
-
-На графике показана зависимость значения параметров$w_i$ в зависимости от параметра~$l_1$-регуляризации~$C$.
-\begin{figure}[h!]
-\includegraphics[width=0.45\textwidth]{../figures/log_reg_cs_exp.eps}
-\includegraphics[width=0.45\textwidth]{../figures/log_reg_cs_exp.eps}
+\begin{figure}[h] 
+    \centering
+    \includegraphics[width=15cm,height=6cm,keepaspectratio]{ProphetPreds_largefontsize.png}
+    \label{fig:ProphetPreds}
+    % \caption{Prophet forecast for American football cluster.}
 \end{figure}
 
-С увеличением параметра регуляризации~$C$ число ненулевых параметров~$w_i$ уменьшается.
+
+% \begin{figure}[h] 
+%     \centering
+%     \includegraphics[width=15cm,height=6cm,keepaspectratio]{ProphetPreds.png}
+%     \label{fig:ProphetPreds}
+%     \caption{Prophet forecast for American football cluster.}
+% \end{figure}
+
+% \begin{figure}[h] 
+%     \centering
+%     \includegraphics[width=10cm,height=6cm,keepaspectratio]{ProphetWin_90days_largefontsize.png}
+%     \label{fig:ProphetPreds}
+%     \caption{Prophet forecast for American football cluster.}
+% \end{figure}
+% \begin{frame}
+
+
+\end{frame}
+% -------------------------------------------------------
+
+\begin{frame}{Результаты прогнозирования}
+
+
+
+\begin{figure}
+\includegraphics[width=1.0\textwidth]{ProphetWin_90days_largefontsize.png}
+% \caption{Prophet превзошёл всех}
+\end{figure}
+\end{frame}
+
+% \begin{frame}{Анализ ошибки}
+
+% Вычислим ошибку MAE каждого из прогнозов. В случае синтетического набора: $\text{MAE}_1 = 0.55$, $\text{MAE}_2 = 0.17$, $\text{MAE}_3 = 0.17$. На реальном наборе: $\text{MAE}_1 = 895.2$, $\text{MAE}_2 = 152.8$, $\text{MAE}_3 = 0.11$.
+
+% \begin{figure}[h]
+%   \begin{minipage}{0.5\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{1_error_ts.png}
+%     \caption{Cредняя MAE прогноза попарных расстояний для каждого из рядов при 1-ом способе подсчета $\Sigma$}
+%   \end{minipage}\hfill
+%   \begin{minipage}{0.5\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{2_error_ts.png}
+%     \caption{Cредняя MAE прогноза попарных расстояний для каждого из рядов при 2-ом способе подсчета $\Sigma$}
+%   \end{minipage}
+% \end{figure}
+
+% \end{frame}
+
+
+
+
+
+
+% -------------------------------------------------------
+
+\begin{frame}{Полученные гранты}
+
+
+\begin{figure}
+\includegraphics[width=1.0\textwidth]{grand.png}
+% \caption{Prophet превзошёл всех}
+\end{figure}
+
+Заявка: С1ИИ-428328
 
 \end{frame}
 
 %----------------------------------------------------------------------------------------------------------
-\section{Выводы}
-\begin{frame}{Выводы}
-\justifying
-	\begin{enumerate}
-	\justifying
-	    \item Предложен \ldots.
-        \item Доказаны теоремы \ldots, 
-        \begin{itemize}
-            \item[---] \ldots,
-            \item[---] \ldots.
-        \end{itemize}
-        \item Предложен метод \ldots
-        \begin{itemize}
-            \item[---] \ldots,
-            \item[---] \ldots.
-        \end{itemize}
-        \item Предложены методы \ldots
-        \begin{itemize}
-            \item[---] \ldots,
-            \item[---] \ldots.
-        \end{itemize}
-        \item Предложена вероятностная интерпретации \ldots.
-	\end{enumerate}
+
+\begin{frame}{Заключение}
+\begin{block}{Основные результаты}
+\begin{itemize}
+    \item Предложен гибридный подход, сочетающий методы прогнозирования временных рядов и тематического моделирования
+    \item Разработан механизм оценки значимости трендов, повышающий точность прогнозирования
+    \item Выявлены ограничения традиционных методов прогнозирования при наличии аномалий в данных
+    \item Намечены пути дальнейшего развития, включая исследование алгоритмов обнаружения аномалий
+\end{itemize}
+\end{block}
+% Представленный подход демонстрирует высокую эффективность в прогнозировании динамики медиа-ландшафта и может быть применен в различных областях, таких как анализ научных публикаций, прогнозирование спроса на продукты и мониторинг социальных тенденций.
 \end{frame}
 %----------------------------------------------------------------------------------------------------------
-
-\end{document} 
+\end{document}
