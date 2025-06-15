@@ -1,0 +1,717 @@
+\documentclass{beamer}
+\beamertemplatenavigationsymbolsempty
+\usecolortheme{beaver}
+\setbeamertemplate{blocks}[rounded=true, shadow=true]
+\setbeamertemplate{footline}[page number]
+
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{amssymb,amsfonts,amsmath,mathtext}
+\usepackage{subfig}
+\usepackage[all]{xy}
+\usepackage{array}
+\usepackage{multicol}
+\usepackage{hyperref}
+\usepackage{hhline}
+\usepackage{arydshln}
+\usepackage{amsmath}        % для расширенных формул
+\usepackage{algorithm}      % среда float «Algorithm»
+\usepackage{algpseudocode}  % стиль псевдокода (входит в пакет algorithmicx)
+
+\graphicspath{{fig/}{../fig/}}
+
+% \title[Прогнозирование высоковолатильных временных рядов социальных трендов и общественных интересов]
+% {Прогнозирование высоковолатильных временных рядов социальных трендов и общественных интересов}
+\title[Прогнозирование высоковолатильных временных рядов]
+{Прогнозирование высоковолатильных временных рядов}
+\author[Е.~В. Задворнов]{Егор Валерьевич Задворнов}
+\institute{Московский физико-технический институт\\
+Специализация: Интеллектуальный анализ данных\\
+Направление: 09.03.01 Информатика и вычислительная техника}
+\date{\small \emph{Научный руководитель:} к.ф.-м.н. А.\,С.~Малков\\[1ex]2025}
+
+\begin{document}
+
+%--------------------------------------------------------------------------------
+\begin{frame}
+  \thispagestyle{empty}
+  \maketitle
+\end{frame}
+
+
+%--------------------------------------------------------------------------------
+\begin{frame}{Прогнозирование высоковолатильных временных рядов}
+  \vspace{-0.4cm}
+    \begin{block}{Цель исследования}
+          \vspace{-0.1cm}
+        Повысить точность прогноза распределений тематик в текстовых документах, распеределённых во времени, с помощью метода, устойчивого к циклическим\footnote{Под циклом подразумевается изменение с переменным периодом, непривязанное ко времени, которое не портит предположение о слабой стационарности временного ряда. Отражают компоненту цикличности с переменным периодом, увеличивают дисперсию ошибки прогноза.} словам. 
+    \end{block}
+  \vspace{-0.2cm}
+    \begin{block}{Проблема}
+      \vspace{-0.1cm}
+        Классические регрессионные (AR) подходы прогнозирования распределения тематик неустойчивы к появлению нерегулярных циклических слов тематик.
+    \end{block}
+  \vspace{-0.2cm}
+    \begin{block}{Предлагаемое решение}
+          \vspace{-0.1cm}
+        Предлагается повысить точноть AR-моделей с помощью выделения подмножества слов словаря, коррелирующих с временным распределением соответствующих тематик.
+    \end{block}
+\end{frame}
+
+
+
+\begin{frame}{Обозначения и исходные данные}
+  \vspace{-0.3cm}
+  \begin{block}{Обозначения и исходные данные}
+    % \vspace{-0.4cm}
+    Рассматривается конечное множество тематик (кластеров) $\overline{T} = \{T_1, \dots, T_K\}$ и словарь $\mathcal{W}_{\mathrm{all}}$, содержащий $W = |\mathcal{W}_{\mathrm{all}}|$ слов. Каждой тематике $T_k$ соответствует подмножество слов $T_k \subset \mathcal{W}_{\mathrm{all}}$. 
+
+    Для каждого слова $w$ и момента времени $t$ задана частота:
+    \footnotesize
+    \(
+    f(w,t)\colon \mathcal{W}_{\mathrm{all}} \times \{0, \dots, t{-}1\} \to \mathbb{N}_{\ge 0}
+    \)
+
+    $K$ — число тематик, $T_k$~— тематика, $f(w,t)$~— частота слова $w$ в момент $t$.
+        \normalsize
+  \end{block}
+
+  % \vspace{-0.3cm}
+  \begin{block}{Целевая переменная - распределение тематик во времени}
+    \vspace{-0.4cm}
+    \footnotesize
+    \[
+    \nu_k(t) := \frac{\sum_{w \in T_k} f(w,t)}{\sum_{j=1}^K \sum_{w \in T_j} f(w,t)},\quad \overline{\nu}(t) := (\nu_1(t), \dots, \nu_K(t)),\quad \sum_{k=1}^K \nu_k(t) = 1
+    \]
+    \normalsize
+  \end{block}
+\end{frame}
+
+
+
+% \begin{frame}{Постановка задачи}
+% ЛОГИТ verso
+% \vspace{-0.3cm}
+% \begin{block}{Вероятностная модель с логистическим нормальным распределением}
+% \footnotesize
+% Предположим, что логарифмические отношения долей следуют многомерному нормальному распределению:
+% \[
+% \mathbf{y}(t) = \left( \ln\frac{\nu_1(t)}{\nu_K(t)}, \dots, \ln\frac{\nu_{K-1}(t)}{\nu_K(t)} \right) \sim \mathcal{N}(\boldsymbol{\mu}_t, \Sigma_t)
+% \]
+% Тогда:
+% \begin{itemize}
+%     \item Распределение $\overline{\nu}(t)$ является \emph{логистическим нормальным} (Aitchison, 1986)
+%     \item Условное распределение при заданной истории:
+%     \[
+%     \mathbf{y}(t) \mid \mathcal{F}_{t-1} \sim \mathcal{N}(\boldsymbol{\mu}_{t|t-1}, \Sigma_{t|t-1})
+%     \]
+%     \item Оптимальный прогноз в смысле MSE:
+%     \[
+%     \widehat{\mathbf{y}}(t) = \mathbb{E}[\mathbf{y}(t) \mid \mathcal{F}_{t-1}] = \boldsymbol{\mu}_{t|t-1}
+%     \]
+%     \item Обратное преобразование в симплекс:
+%     \[
+%     \widehat{\nu}_k(t) = \frac{e^{\widehat{y}_k(t)}}{1 + \sum_{j=1}^{K-1} e^{\widehat{y}_j(t)}}, \quad k=1,\dots,K-1
+%     \]
+% \end{itemize}
+% \normalsize
+% \end{block}
+
+% \vspace{-0.2cm}
+% \begin{block}{Оптимизационная задача}
+% \footnotesize
+% Максимизация логарифмического правдоподобия эквивалентна минимизации MSE в пространстве логитов:
+% \[
+% \min_{\overline{\phi}} \sum_{t} \left\| \mathbf{y}(t) - \widehat{\mathbf{y}}(t \mid \overline{\phi}) \right\|_{\Sigma_{t|t-1}^{-1}^2 + \ln|\det\Sigma_{t|t-1}|}
+% \]
+% где $\widehat{\mathbf{y}}(t \mid \overline{\phi})$ - прогнозная модель.
+% \normalsize
+% \end{block}
+
+% \vspace{-0.6cm}
+% \begin{block}{Цель}
+% Построить устойчивую модель прогноза $\widehat{\mathbf{y}}(t \mid \overline{\phi})$ в условиях аномалий и циклов.
+% \end{block}
+% \end{frame}
+
+
+% \begin{frame}{Постановка задачи}
+% \vspace{-0.3cm}
+% \begin{block}{Вероятностная модель с ограничениями}
+% \footnotesize
+% Последовательность наблюдений $\{\overline{\nu}(t)\}$ рассматривается как реализация случайного процесса в симплексе $\Delta^K$. 
+
+% Модель прогноза:
+% \[
+% \widehat{\overline{\nu}}\left(t \mid \overline{\phi},\, t{-}1{:}t{-}t_0\right)
+% = \mathrm{Proj}_{\Delta^K}\left( g_{\overline{\phi}}\left( \{f(w,\tau)\}_{w\in\mathcal{W},\tau=t-t_0}^{t-1} \right) \right)
+% \]
+% где:
+% \begin{itemize}
+%     \item $g_{\overline{\phi}}$ - параметрическая модель прогноза
+%     \item $\mathrm{Proj}_{\Delta^K}$ - проекция на симплекс $\Delta^K$
+%     \item $\overline{\nu}(t) \in \Delta^K$ гарантирует $\sum_k \nu_k(t) = 1$, $\nu_k(t) \geq 0$
+% \end{itemize}
+% \normalsize
+% \end{block}
+
+% \vspace{-0.2cm}
+% \begin{block}{Задача оптимизации с симплекс-ограничениями}
+% \footnotesize
+% Минимизация квадратичной ошибки с учётом специфики распределений:
+% \[
+% \min_{\overline{\phi} \in \mathbb{R}^d} \; 
+% \frac{1}{|T_{\mathrm{test}}|}
+% \sum_{t \in T_{\mathrm{test}}}
+% \left\|
+% \overline{\nu}(t)
+% -
+% \widehat{\overline{\nu}}\left(t \mid \overline{\phi}\right)
+% \right\|_2^2
+% \]
+% при условии $\widehat{\overline{\nu}}(t) \in \Delta^K$ для всех $t$.
+% \normalsize
+% \end{block}
+
+% \vspace{-0.6cm}
+% \begin{block}{Цель}
+% Построить устойчивую модель прогноза распределения тематик в условиях аномальных значений и цикличных изменений.
+% \end{block}
+% \end{frame}
+
+% --------------------------------------------------------------------------------
+% ПОСТАНОВКА С ВЕР МОДЕЛЬЮ
+% \begin{frame}{Постановка задачи}
+% \vspace{-0.3cm}
+% \begin{block}{Вероятностная модель}
+% \footnotesize
+% Последовательность наблюдений $\{\overline{\nu}(t)\}$ рассматривается как реализация случайного процесса, где:
+% \[
+% \overline{\nu}(t) = \boldsymbol{\mu}_t + \boldsymbol{\varepsilon}_t, \quad
+% \boldsymbol{\varepsilon}_t \sim \mathcal{N}(0, \Sigma_t)
+% \]
+% Прогнозная модель оценивает условное математическое ожидание:
+% \[
+% \widehat{\overline{\nu}}\left(t \mid \overline{\phi},\, t{-}1{:}t{-}t_0\right)
+% = \mathbb{E}\left[\overline{\nu}(t) \mid \mathcal{F}_{t-t_0:t-1}\right]
+% \]
+% где $\mathcal{F}_{t-t_0:t-1}$ - $\sigma$-алгебра, порождённая наблюдениями $\{f(w,\tau)\}_{w\in\mathcal{W},\tau=t-t_0}^{t-1}$.
+% \normalsize
+% \end{block}
+
+% \vspace{-0.1cm}
+% \begin{block}{Задача оптимизации}
+% \footnotesize
+% Минимизация квадратичной ошибки эквивалентна максимизации правдоподобия при нормальном шуме:
+%     \[
+%     \min_{\overline{\phi} \in \mathbb{R}^d} \; 
+%     \sum_{t} 
+%     \left\|
+%     \overline{\nu}(t)
+%     -
+%     \widehat{\overline{\nu}}\left(t \,\bigm|\, \overline{\phi},\; t{-}1{:}t{-}t_0 \right)
+%     \right\|_2^2
+%     \]
+% \normalsize
+% \end{block}
+
+% \vspace{-0.6cm}
+% \begin{block}{Цель}
+% Построить устойчивую модель прогноза распределения тематик в условиях аномальных значений и цикличных изменений.
+% \end{block}
+% \end{frame}
+
+% ПОСТАНОВКА БЕЗ ВЕР МОДЕЛИ
+\begin{frame}{Постановка задачи}
+  \vspace{-0.3cm}
+  \begin{block}{Задача}
+    % \vspace{-0.5cm}
+    Минимизация квадратичной ошибки прогноза распределения тематик: 
+       \footnotesize
+    \[
+    \min_{\overline{\phi} \in \mathbb{R}^d} \; 
+    \sum_{t} 
+    \left\|
+    \overline{\nu}(t)
+    -
+    \widehat{\overline{\nu}}\left(t \,\bigm|\, \overline{\phi},\; t{-}1{:}t{-}t_0 \right)
+    \right\|_2^2
+    \]
+        \normalsize
+    где $\widehat{\overline{\nu}}$ --- прогноз распределения тематик на момент $t$ на основе предыстории длины $t_0$.
+
+  \end{block}
+
+  % \vspace{-0.2cm}
+  \begin{block}{Цель}
+    Построить устойчивую модель прогноза распределения частот тематик в условиях аномальных значений и цикличных изменений.
+  \end{block}
+\end{frame}
+%--------------------------------------------------------------------------------
+\begin{frame}[t]{Построение тематических кластеров из словаря}
+\small
+\vspace{-0.3cm}
+\begin{block}{Постановка задачи кластеризации}
+    % \vspace{-0.4cm}
+\footnotesize
+\(\mathcal{W}_{\mathrm{all}}=\{w_1,\dots,w_W\}\).  
+Найти решение \(\overline{T}\), \(T_i\cap T_j=\varnothing\),
+\(\bigsqcup_kT_k=\mathcal{W}_{\mathrm{all}}\).
+\normalsize
+\end{block}
+
+% \vspace{-0.3cm}
+\begin{block}{Существущие методы решения}
+\vspace{-0.2cm}
+\begin{itemize}
+    \footnotesize
+  \item \emph{Embeddings+K-Means:}
+    \(\displaystyle\min_{T_k}\sum_{k=1}^K\sum_{w\in T_k}\|\mathbf e_w-\mu_k\|^2,\;\mathbf e_w=\mathrm E(w).\)
+  \item \emph{Latent Dirichlet Allocation(LDA):} 
+    $\displaystyle p(\theta,\phi,z,w|\alpha,\beta)
+            =\prod_{k=1}^K p(\phi_k|\beta)\prod_{d=1}^D p(\theta_d|\alpha)
+             \prod_{n=1}^{N_d}p(z_{dn}|\theta_d)p(w_{dn}|\phi_{z_{dn}}).$
+    \normalsize        
+\end{itemize}
+\end{block}
+
+\vspace{-0.7cm}
+\begin{block}{Оптимизация \(K\) - числа тематик.}
+% \vspace{-0.4cm}
+\footnotesize
+\(\displaystyle K^*=\arg\min_K\frac1K\sum_{m=1}^KC_{\mathrm{cv}}(c_m),\)  
+где \(C_{\mathrm{cv}}\) — мера когерентности тем.
+
+\(
+  C_{\mathrm{cv}}
+  \;=\;
+  \frac{1}{\lvert S^{\mathrm{one}}_{\mathrm{set}}\rvert}
+  \sum_{(W_0,W_*)\in S^{\mathrm{one}}_{\mathrm{set}}}
+    \tilde m_{\cos(\mathrm{nlr},1)}(W_0,W_*)
+\)
+\vspace{0.2cm}
+где 
+
+\(
+  S^{\mathrm{one}}_{\mathrm{set}}
+  =\{\,(\{w_i\},W)\mid w_i\in W\subset\mathcal W_{\mathrm{all}}\}
+\) и 
+\(\tilde m_{\cos(\mathrm{nlr},1)}\) — косинусное сходство между векторами множеств \(W_0\) и \(W_*\).
+\normalsize
+\end{block}
+
+\end{frame}
+
+%--------------------------------------------------------------------------------
+\begin{frame}{Классический подход к прогнозу тематик}
+\begin{block}{Авторегрессионная модель}
+Для каждой тематики $T_k\in\overline{T}$ используется модель вида:
+\footnotesize
+\[
+\widehat{\nu}_k(t+1) = g_{\psi_k}(\nu_k(t), \dots, \nu_k(t - t_0 + 1))
+\]
+\normalsize
+где $g_{\psi_k}$ — модель предсказания тематик, прогнозирующая динамику каждой темы независимо.
+\end{block}
+
+\begin{block}{Прогноз распределения тематики}
+Условное математическое ожидание следующего значения распределения при заданной предыстории:
+\footnotesize
+\[
+\widehat{\nu}_k(t+1)
+\;:=\;
+\mathbb{E}_{\widehat{\psi}_k}\!\bigl[\nu_k(t+1)\mid\mathcal F_t\bigr].
+\]
+\normalsize
+\end{block}
+
+\vspace{-0.5cm}
+\begin{block}{Функционал ошибки}
+Среднеквадратичное отклонение прогнозов от фактических значений распределения тем:
+\footnotesize
+\[
+\mathcal{L} = \sum_{t}
+\|\overline{\nu}(t) - \widehat{\overline{\nu}}(t)\|_2^2
+\]
+\normalsize
+\end{block}
+\end{frame}
+
+
+
+%----------------------------------------------------------------------------------------------------------
+\begin{frame}{Ограничения подхода в условиях высокой волатильности}
+\begin{block}{Выделяемые подмножества слов исходного словаря и связь с теорией временных рядов}
+% \vspace{-0.3cm}
+\begin{enumerate}
+\footnotesize
+  \item $\mathcal{W}_{\mathrm{core}}$ --- слова с устойчивой временной структурой и высокой автокорреляцией: тренды (плавные долгосрочные изменения) и сезонные компоненты (периодические колебания с постоянным периодом):
+\begin{flalign*}
+& \mathcal{W}_{\mathrm{core}} = \left\{ w \in \mathcal{W}_{\mathrm{all}} \;\middle|\; \rho_w := \operatorname{Corr}(f(w,t),f(T_k,t+1))\ge r, \text{ где } w \in T_k \right\} &
+\end{flalign*}
+
+\item $\mathcal{W}_{\mathrm{WN}}$ --- мультитематические слова: моделируются случайной ошибкой из-за высокой вероятности перехода между тематиками:
+\begin{flalign*}
+& \mathcal{W}_{\mathrm{WN}} = \left\{ w \in \mathcal{W}_{\mathrm{all}} \;\middle|\; f(w,t) = [\varepsilon_w(t)]_+,\, \rho_w = 0 \right\} &
+\end{flalign*}
+
+\item $\mathcal{W}_{\mathrm{SD}}$ --- циклы: изменения с переменным периодом. Сохраняют стационарность, но увеличивает дисперсию ошибки прогноза:
+\begin{flalign*}
+& \mathcal{W}_{\mathrm{SD}} = \left\{ w \in \mathcal{W}_{\mathrm{all}} \;\middle|\; f(w,t) = [S_w(t) + \varepsilon_w(t)]_+, \quad \rho_w(\tau) \approx 0\right\}, & \\
+& S_w(t) = \textstyle\sum A_{w,m} \kappa(t{-}\tau_{w,m}),  \kappa(\tau)=\frac{\mathrm e^{-\lambda|\tau|}}{1+\tau^{2}} &
+\end{flalign*}
+\end{enumerate}
+\normalsize
+\end{block}
+\end{frame}
+
+
+%----------------------------------------------------------------------------------------------------------
+% \begin{frame}{Ограничения подхода в условиях высокой волатильности}
+% \begin{block}{Определение типов слов}
+% \vspace{-0.5cm}
+% \footnotesize
+% \[
+% \begin{aligned}
+% \mathcal{W}_{\mathrm{core}} &= \left\{ w \in \mathcal{W}_{\mathrm{all}} \;\middle|\; \rho_w := \operatorname{Corr}(f(w,t),f(T_k,t+1))\ge r, \text{ где } w \in T_k \right\}, \\
+% \mathcal{W}_{\mathrm{WN}}   &= \left\{ w \in \mathcal{W}_{\mathrm{all}} \;\middle|\; f(w,t) = [\varepsilon_w(t)]_+,\, \rho_w = 0 \right\}, \\
+% \mathcal{W}_{\mathrm{SD}}   &= \left\{ w \in \mathcal{W}_{\mathrm{all}} \;\middle|\; f(w,t) = [S_w(t) + \varepsilon_w(t)]_+, \quad \rho_w(\tau) \approx 0\right\}, \\
+% &\quad S_w(t) = \textstyle\sum A_{w,m} \kappa(t{-}\tau_{w,m}),  \kappa(\tau)=\frac{\mathrm e^{-\lambda|\tau|}}{1+\tau^{2}}.
+% \end{aligned}
+% \]
+% \normalsize
+% \end{block}
+
+% \vspace{-0.4cm}
+% \begin{block}{Интерпретация и связь с теорией временных рядов}
+% \begin{enumerate}
+% \footnotesize
+%   \item $\mathcal{W}_{\mathrm{core}}$ --- слова с устойчивой временной структурой и высокой автокорреляцией: тренды (плавные долгосрочные изменения) и сезонные компоненты (периодические колебания с постоянным периодом)
+% \item $\mathcal{W}_{\mathrm{WN}}$ --- мультитематические слова: моделируются случайной ошибкой из-за высокой вероятности перехода между тематиками
+% \item $\mathcal{W}_{\mathrm{SD}}$ --- циклы: изменения с переменным периодом. Сохраняют стационарность, но увеличивает дисперсию ошибки прогноза
+% \end{enumerate}
+% \end{block}
+% \end{frame}
+
+
+
+
+\begin{frame}{Влияние шумовых слов на прогноз тематик}
+\begin{block}{Утверждение 1 (Задворнов, 2025)}
+\footnotesize
+Пусть \(
+\mathcal{W}_{\mathrm{all}} = \mathcal{W}_{\mathrm{core}} \cup \mathcal{W}_{\mathrm{WN}} \cup \mathcal{W}_{\mathrm{SD}}, \quad \mathcal{W}_a \cap \mathcal{W}_b = \varnothing
+\)
+при условии попарной некоррелированности компонент
+\[
+\forall\,a \neq b,\;\forall\,\tau \in \mathbb{Z}:\quad
+Cov\bigl(f^{(a)}(T_k,t),\,f^{(b)}(T_k,t+\tau)\bigr) = 0
+\]
+Тогда
+\[
+Cov\bigl(f(T_k,t),\,f(T_k,t+1)\bigr) = Cov\bigl(f^{(\mathrm{core})}(t),\,f^{(\mathrm{core})}(t{+}1)\bigr)
+\]
+и
+\[
+\rho_k(1) = \frac{Cov^{\mathrm{core}}}{Var^{\mathrm{core}} + \sigma_{\mathrm{WN}}^2 + \sigma_{\mathrm{SD}}^2}.
+\]
+\normalsize
+\end{block}
+
+\vspace{-0.4cm}
+\begin{block}{Вывод}
+\begin{enumerate}
+\item В условиях высокой волатильности $\mathcal{W}_{\mathrm{WN}} \cup \mathcal{W}_{\mathrm{SD}}$ понижают автокорреляцию $\rho_k(1)$, нарушая предпосылки AR-моделей о существенной корреляционной зависимости, и уменьшают точность прогноза. 
+\item Необходим подход, устойчивый к $\mathcal{W}_{\mathrm{WN}}\cup\mathcal{W}_{\mathrm{SD}}$.
+\end{enumerate}
+\end{block}
+\end{frame}
+
+%----------------------------------------------------------------------------------------------------------
+\begin{frame}{Предлагается алгоритм ARFilter}
+
+\begin{block}{Принцип работы}
+% \footnotesize
+\begin{enumerate}
+\item Формируется вектор корреляций между частотами слов и будущими значениями соответствующих тематик.  
+
+\item Выделяется набор слов $\mathcal{W}_{\mathrm{core}}$ с устойчивой временной структурой.  
+
+\item Для каждого выделенного слова строится отдельная AR-модель, прогнозирующая относительные доли:
+\footnotesize
+\[s(w,t) = \frac{f(w,t)}{\sum_{v\in\mathcal{W}_{\mathrm{core}}}f(v,t)}\]
+\normalsize
+
+\item Прогноз относительной доли тематики вычисляется как сумма прогнозов слов, входящих в неё.  
+
+% \item Весовые коэффициенты слов адаптивно корректируются на основе дисперсий их прогнозов.  
+
+% \normalsize
+\end{enumerate}
+\end{block}
+\end{frame}
+
+
+\begin{frame}{Теоретическое обоснование эффективности}
+\begin{block}{Теорема (Задворнов, 2025)}
+\footnotesize
+Пусть для тематики $T_k$:
+\begin{enumerate}
+    \item $\mu_k = \mathbb{E}[\nu_k(t) \mid \mathcal{F}_{t-1}]$ - условное матожидание распределения по всем словам
+    \item $\mu_k^{(\mathrm{core})} = \mathbb{E}[\widehat{\nu}_k^{(\mathrm{core})}(t) \mid \mathcal{F}_{t-1}]$ - условное матожидание по core-словам
+    \item Выполнены условия Утверждения 1 о разбиении словаря
+\end{enumerate}
+и дополнительно выполнены условия на шумовые слова:
+\begin{enumerate}
+    \item Для $w \in \mathcal{W}_{\mathrm{WN}}$: $\mathbb{E}[f(w,t) \mid \mathcal{F}_{t-1}] \leq C_{\mathrm{WN}} \sigma_{\mathrm{WN}}$ 
+    \item Для $w \in \mathcal{W}_{\mathrm{SD}}$: $\mathbb{E}[f(w,t) \mid \mathcal{F}_{t-1}] \leq C_{\mathrm{SD}} \sigma_{\mathrm{SD}}$ (в отсутствие пиков)
+    \item $|\mathcal{W}_{\mathrm{WN}}| C_{\mathrm{WN}}^2 + |\mathcal{W}_{\mathrm{SD}}| C_{\mathrm{SD}}^2 < \kappa$
+\end{enumerate}
+где $\kappa > 0$ - минимальное собственное значение информационной матрицы модели прогноза.
+
+Тогда:
+\[
+  \mathbb{E}\!\bigl[\mathcal L_{\mathrm{ARFilter}}\mid \mathcal{F}_{t}\bigr]:=\mathrm{MSE}\bigl(\widehat{\nu}_k^{(\mathrm{core})}(t)\bigr)
+  \;<\; 
+  \mathrm{MSE}\bigl(\widehat{\nu}_k^{(\mathrm{all})}(t)\bigr) =:\mathbb{E}\!\bigl[\mathcal L_{\mathrm{baseline}}\mid \mathcal{F}_{t}\bigr]
+\]
+\normalsize
+\end{block}
+
+\end{frame}
+
+
+
+\begin{frame}{Псевдокод алгоритма ARFilter}
+\vspace{-0.4cm}
+\begin{figure}[h]
+  \centering
+  \begin{minipage}{.9\linewidth}
+    \begin{algorithm}[H]
+      \caption{ARFilter}\label{alg:selection}
+      \begin{algorithmic}[1]
+        \scriptsize
+        \Require Корпус \(\mathcal{D}=\{(d_i,t_i)\}_{i=1}^N\), порог \(r\), окно \(t_0\)
+        \Ensure \(\overline{T},\,\overline{\theta},\,\overline{\psi}\)
+        \State Извлечь \(\mathcal{W}_{\mathrm{all}}\) и частоты \(f(w,t)\) по $\mathcal{D}$
+        \State \(\overline{T}=\{T_k\}\) с помощью вероятностной модели
+        \ForAll{\(w\in\mathcal{W}_{\mathrm{all}}\)}
+          \State \(\widehat\rho_w\gets\mathrm{Corr}\bigl(f(w,t),f(T_k,t+1)\bigr),\text{ где } w \in T_k\)
+          \State \(\Theta_w\gets\mathbb I[\widehat\rho_w\ge r]\)
+        \EndFor
+        \State \(\mathcal{W}_{\mathrm{core}}\gets\{w:\Theta_w=1\}\)
+        \ForAll{\(w\in\mathcal{W}_{\mathrm{core}}\)}
+          \State \(s(w,t)\gets \frac{f(w,t)}{\sum_{v\in\mathcal{W}_{\mathrm{core}}}f(v,t)}\)
+          \State \(\psi_w\gets\arg\min_{\psi}\sum_{t\in T_{\mathrm{train}}}\bigl(s(w,t)-g_{\psi}(s(w,t-1:t-t_0))\bigr)^2\)
+        \EndFor
+        \State \Return \(\overline{T},\,\overline{\theta},\,\overline{\psi}\)
+        \normalsize
+      \end{algorithmic}
+    \end{algorithm}
+  \end{minipage}
+\end{figure}
+
+\end{frame}
+%--------------------------------------------------------------------------------
+\begin{frame}{Цель вычислительного эксперимента}
+\begin{block}{Основная гипотеза}
+На синтетических данных \(
+  \mathbb{E}\!\bigl[\mathcal L_{\mathrm{ARFilter}}\mid \mathcal{F}_{t}\bigr]
+  <
+  \mathbb{E}\!\bigl[\mathcal L_{\mathrm{baseline}}\mid \mathcal{F}_{t}\bigr]
+\).
+\end{block}
+
+\begin{block}{Генератор данных}
+\vspace{-0.2cm}
+\begin{enumerate}
+\item 3 кластера: Sports, Music, Tech
+\item В каждом: 4 core-слова, 8 white-noise, 8 spike-decay
+\item Ключевые слова Core: тренд + сезонность + шум \(\sigma_{\mathrm{core}}=0.4\)
+\item Случайные слова по распределению WN: \(\mathcal{N}(5, 36)\)
+\item Циклические слова SD вида гиперболический всплеск с экспоненциальным затуханием
+\end{enumerate}
+\end{block}
+
+\vspace{-0.3cm}
+\begin{block}{Условия эксперимента}
+\vspace{-0.2cm}
+\begin{enumerate}
+\item Временной ряд состоит из 40 точек (80 недель)
+\item Разделение на обучающую и отложенную выборку: 39/1
+\item Базовый метод: ARIMA с выбором порядка по AIC
+\item Метрики: MSE по всем кластерам
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}{Результаты вычислительного эксперимента}
+\begin{block}{Сравнение по кластерам ($\times 10^{-3}$ MSE $\pm$ SE)}
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Метод} & \textbf{Sports} & \textbf{Music} & \textbf{Tech} & \textbf{Avg} \\ \hline
+Классический (baseline)    & 41.0$\pm$0.9 & 13.0$\pm$0.8 & 16.0$\pm$0.1 & 23.0$\pm$1.3 \\ \hline
+Предложенный &  1.0$\pm$0.0 &  3.0$\pm$0.2 &  3.0$\pm$0.2 &  2.0$\pm$0.1 \\ \hline
+\end{tabular}
+\normalsize
+\end{block}
+
+\begin{block}{Основные выводы}
+\begin{enumerate}
+\item MSE классического подхода: $(23.0\pm1.3)\times10^{-3}$
+\item MSE предложенного: $(2.0\pm0.1)\times10^{-3}$
+\item Ранжированный порядок тем сохраняется при реализации погрешности, что подтверждает устойчивость результатов
+\item Подтверждение \(
+  \mathbb{E}\!\bigl[\mathcal L_{\mathrm{ARFilter}}\mid \mathcal{F}_{t}\bigr]
+  <
+  \mathbb{E}\!\bigl[\mathcal L_{\mathrm{baseline}}\mid \mathcal{F}_{t}\bigr]
+\).
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}{Результаты вычислительного эксперимента}
+\begin{figure}[H]
+\centering
+\includegraphics[width=.9\textwidth]
+{Pictures/hypotheses_overview_proportions.png}
+
+\caption*{\footnotesize\textbf{Визуализация проверки гипотезы.} Четыре панели иллюстрируют статистические свойства синтетического кластера \textit{Sports}}
+\end{figure}
+
+
+\end{frame}
+
+\begin{frame}{Результаты вычислительного эксперимента}
+\begin{block}{Анализ результатов}
+\footnotesize
+\begin{enumerate}
+\item[\textbf{A.}] Матрица корреляций \(\rho\bigl(f(w,t),f(u,t)\bigr)\): блок core--core показывает высокую корреляцию с тематикой, WN/SD-блоки близки к нулю. \\
+\emph{Следствие:} Подтвержается необходимость подхода, устойчивого к $\mathcal{W}_{\mathrm{WN}}\cup\mathcal{W}_{\mathrm{SD}}$.
+
+\item[\textbf{B.}] Траектория \(\nu_{\text{Sports}}(t)\) для всех слов vs только core-слов. \\
+\emph{Следствие:} Шумовые слова увеличивают дисперсию прогноза.
+
+\item[\textbf{C.}] MAE: \(\displaystyle \lvert T_{\mathrm{test}}\rvert^{-1}\sum_{t\in T_{\mathrm{test}}}\lvert\widehat{\nu}(t)-\nu(t)\rvert\) снижается в 20 раз. \\
+\emph{Следствие:} Алгоритм ARFilter превосходит классический подход.
+
+\item[\textbf{D.}] Корреляционные коэффициенты \(\lvert\beta_w\rvert\): core-слова доминируют (зеленый), шумовые близки к нулю (серый). \\
+\emph{Следствие:} Корреляционный алгоритм эффективно выделяет информативные признаки.
+\end{enumerate}
+\end{block}
+\end{frame}
+
+%----------------------------------------------------------------------------------------------------------
+% \begin{frame}{DRAFT Лемма: уменьшение условной дисперсии}
+% \subsection{Лемма (уменьшение условной дисперсии при кластеризации)}
+% Пусть для каждой темы $i$ в кластере $C_k$ ряд
+% \[
+% x_i(t)=s_i(t)+\varepsilon_i(t),
+% \]
+% где шум $\varepsilon_i(t)$ некоррелирован между разными $i\in C_k$:
+% \[
+% \Cov\bigl(\varepsilon_i(t),\varepsilon_j(t)\bigr)=0,\quad i\neq j.
+% \]
+% Тогда агрегированный по кластеру ряд
+% \[
+% y_k(t)
+% =\frac{1}{|C_k|}\sum_{i\in C_k}x_i(t)
+% =\underbrace{\frac{1}{|C_k|}\sum_{i\in C_k}s_i(t)}_{\text{сигнал}}
+% \;+\;
+% \underbrace{\frac{1}{|C_k|}\sum_{i\in C_k}\varepsilon_i(t)}_{\varepsilon_k(t)}.
+% \]
+% Из некоррелированности следует
+% \[
+% Var\bigl(\varepsilon_k(t)\bigr)
+% =\frac{1}{|C_k|^2}\sum_{i\in C_k}Var\bigl(\varepsilon_i(t)\bigr)
+% =\frac{\sigma^2}{|C_k|}.
+% \]
+% Таким образом, усреднение уменьшает уровень шума в $|C_k|$ раз, что обосновывает гипотезу о более гладких агрегированных рядах после кластеризации.
+% \end{frame}
+
+%--------------------------------------------------------------------------------
+%--------------------------------------------------------------------------------
+
+% \begin{frame}{Лемма: уменьшение условной дисперсии}
+% \subsection{Лемма (уменьшение условной дисперсии при кластеризации)}
+
+% Пусть вектор шума каждой темы $\varepsilon_i(t)$ между различными $i \in C_k$ (в одном кластере) некоррелирован. Тогда агрегированный ряд
+% \[
+% Y_k(t) = \sum_{i \in C_k} x_i(t)
+% \quad\Bigl(\text{или } Y_k(t) = \tfrac{1}{|C_k|} \sum_{i \in C_k} x_i(t)\Bigr)
+% \]
+% имеет дисперсию шума
+% \[
+% \mathrm{Var}\Bigl(\sum_{i \in C_k} \varepsilon_i(t)\Bigr)
+% = \sum_{i \in C_k} \mathrm{Var}\bigl(\varepsilon_i(t)\bigr)
+% \;\ll\; \sum_{i \in C_k} \mathrm{Var}\bigl(x_i(t)\bigr),
+% \]
+% поскольку $x_i(t) = s_i(t) + \varepsilon_i(t)$ (где $s_i(t)$ — тренд). Если $\mathrm{Var}(\varepsilon_i)=\sigma^2$ для всех $i \in C_k$, то для среднего ряда:
+% \[
+% \mathrm{Var}\Bigl(\tfrac{1}{|C_k|}\!\sum_{i \in C_k}\!\varepsilon_i(t)\Bigr)
+% = \frac{\sigma^2}{|C_k|}.
+% \]
+% Таким образом, усреднение уменьшает уровень шума в $|C_k|$ раз, что обосновывает гипотезу о более гладких агрегированных рядах после кластеризации.
+
+% \end{frame}
+
+%--------------------------------------------------------------------------------
+\begin{frame}{Выносится на защиту}
+\begin{enumerate}
+    \item \textbf{Метод прогнозирования тематик во времени с использованием регуляризации при условии высокой волатильности}\\
+    \begin{enumerate}
+        \item Регуляризация через отбор признаков: \(\theta_w=\mathbb{I}[\operatorname{Corr}(f(w,t),f(T_k,t+1))\ge r], \text{ где } w \in T_k\)
+        \item Локальные модели прогноза для отобранных признаков
+    \end{enumerate}
+
+    \item \textbf{Эмпирическое подтверждение эффективности}\\
+    На синтетических данных достигнуто снижение MSE на 91\%:
+    \[
+        \Delta\mathrm{MSE} = \frac{\mathcal L_{\mathrm{baseline}}-\mathcal L_{\mathrm{ARFilter}}}{\mathcal L_{\mathrm{baseline}}}\times100\%
+    \]
+
+    \item \textbf{Условия из критерия применимости метода}\\
+    Метод эффективен при условиях:
+    \[
+        \frac{\sigma_{\mathrm{noise}}^{2}}{\sigma_{\mathrm{core}}^{2}} \gg 1, \quad
+        \rho_{w}(1)\approx0 \;\;\text{для}\;\; w\in\mathcal{W}_{\mathrm{WN}}\cup\mathcal{W}_{\mathrm{SD}}
+    \]
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Список литературы}
+\begin{thebibliography}{99} 
+    \footnotesize
+    
+    \bibitem[Choi \& Varian, 2012]{choi2012predicting}
+        Choi, H., Varian, H. (2012)
+        \newblock Predicting the Present with Google Trends
+        \newblock Economic Record, 88, 2--9
+
+    \bibitem[Rappaz et al., 2019]{rappaz2019dynamic}
+        Rappaz, J., Bourgeois, D., Aberer, K. (2019)
+        \newblock A Dynamic Embedding Model of the Media Landscape
+        \newblock The World Wide Web Conference, 1544--1554
+
+    \bibitem[Taylor \& Letham, 2018]{Taylor2018}
+        Taylor, S. J., Letham, B. (2018)
+        \newblock Forecasting at Scale
+        \newblock The American Statistician, 72(1), 37--45
+
+    \bibitem[Shumway \& Stoffer, 2000]{Shumway2000}
+        Shumway, R. H., Stoffer, D. S. (2000)
+        \newblock Time Series Analysis and its Applications
+        \newblock Springer
+
+    \bibitem[Gardner, 1985]{Gardner1985}
+        Gardner, E. S. (1985)
+        \newblock Exponential Smoothing: The State of the Art
+        \newblock Journal of Forecasting
+
+\end{thebibliography}
+\end{frame}
+
+
+\end{document}
